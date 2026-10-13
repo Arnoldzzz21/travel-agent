@@ -1,44 +1,43 @@
-# Mi agente de viajes (Streamlit)
+# My Travel Agent (Streamlit)
 
-Chat con un agente (Claude) + ruta + mapa, con una carpeta por viaje.
+Chat with an agent (Claude) + route + map, with one folder per trip.
 
-## Cómo correrlo
+## How to run it
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
-1. Abre el menú lateral (⚙️ Ajustes), pon el **nombre** de tu agente y pega tu clave de Anthropic
-   (o créala en `.streamlit/secrets.toml`, copiando `secrets.toml.example`).
-2. Crea tu primera carpeta de viaje (ej. "Madrid"). Se guarda en `viajes/madrid/`.
+1. Open the side menu (⚙️ Ajustes / Settings), set your agent's **name** and paste your Anthropic API key
+   (or create it in `.streamlit/secrets.toml`, copying `secrets.toml.example`).
+2. Create your first trip folder (e.g. "Madrid"). It is saved in `viajes/madrid/`.
 
-## Pantallas
-Diseño inspirado en una plantilla de viajes: encabezado con título centrado, pestañas de texto, carrusel de destacados, "Recomendados",
-barra de navegación flotante abajo (Inicio · Ruta · Mapa · Chat) y pantalla de detalle con hoja blanca sobre el paisaje.
+Note: the app interface is in Spanish.
 
-- **Descubrir**: los 51 países de `data/Countries.xlsx`, cada uno con su paisaje animado (Fuji con pétalos para Japón, torre, Alpes, castillos...).
-  Filtra por *Todos / Mis países / Europa / Asia*, por zona (Europa occidental, norte, sur, este, Balcanes y Turquía, Cáucaso) o busca por nombre.
-  **Ver ficha** abre transporte, tarjetas y pases (turista y residente), formas de pago y precios típicos, en moneda local
-  (Japón se muestra en dólares con los yenes entre paréntesis). La ficha se consulta en la web una vez y se guarda en `viajes/_fichas/`;
-  los precios que no se encuentran se marcan como aprox.
-- **Ruta**: tabla de paradas (ciudad, país, fechas, hotel). Importa/descarga Excel. Lugares guardados con total de gasto.
-- **Mapa**: paradas, lugares y rutas del agente; botones para abrir la ruta en Google Maps (sin API ni costo).
-- **Chat**: el agente puede buscar en la web (precios, transporte, dónde comer), ver el clima, convertir moneda,
-  dibujar rutas y guardar lugares/paradas/notas en tu carpeta.
+## Screens
+Design inspired by a travel app template: centered title header, text tabs, featured carousel, "Recomendados" (Recommended) grid,
+a floating bottom navigation bar (Inicio · Ruta · Mapa · Chat) and a detail screen with a white sheet over the landscape.
 
-## Controlar el gasto
-- La API de Anthropic se cobra aparte de tu suscripción: fija un **límite mensual** en console.anthropic.com.
-- Ajustes: modelo (Haiku es el más barato), búsquedas web por respuesta y por ficha de país, y memoria del chat.
-- Google Maps: la app solo genera enlaces, **no usa la API de Google**, así que no hay cobro por ahí.
+- **Discover (Descubrir)**: the 51 countries in `data/Countries.xlsx`, each with its own animated landscape (Mount Fuji with petals for Japan, tower, Alps, castles...).
+  Filter by *All / My countries / Europe / Asia*, by zone (Western Europe, Northern, Southern, Eastern, Balkans and Turkey, Caucasus) or search by name.
+  **Ver ficha** (View card) opens transport, cards and passes (tourist and resident), payment methods and typical prices, in local currency
+  (Japan is shown in US dollars with yen in parentheses). The country card is researched on the web once and saved in `viajes/_fichas/`;
+  prices that cannot be found are marked as approximate.
+- **Route (Ruta)**: table of stops (city, country, dates, hotel). Import/download Excel. Saved places with total spending.
+- **Map (Mapa)**: stops, places and the agent's routes; buttons to open the route in Google Maps (no API, no cost).
+- **Chat**: the agent can search the web (prices, transport, where to eat), check the weather, convert currency,
+  draw routes and save places/stops/notes in your folder.
 
-## "Que no se atonte"
-- 🧹 Nueva conversación: vacía el chat (ruta, lugares y notas se conservan).
-- 📝 Resumir y limpiar: guarda un resumen en `notas.md` y vacía el chat.
-- La memoria del chat solo envía tus últimos N mensajes.
+## Controlling costs
+- The Anthropic API is billed separately from your subscription: set a **monthly spend limit** at console.anthropic.com.
+- Settings: model (Haiku is the cheapest), web searches per answer and per country card, and chat memory.
+- Google Maps: the app only generates links and **does not use the Google API**, so there are no charges from that side.
 
-## Carpetas
-```
-viajes/madrid/ trip.json · ruta.csv · lugares.json · notas.md · ultima_ruta.json
-```
-Todo se guarda en disco local. En Streamlit Community Cloud los archivos se borran al reiniciar;
-para usarla desde el celular en la nube hay que cambiar `storage.py` por una versión que guarde en Google Drive
-(siguiente etapa).
+## Keeping the chat sharp
+- 🧹 Nueva conversación (New conversation): clears the chat (route, places and notes are kept).
+- 📝 Resumir y limpiar (Summarize and clear): saves a summary in `notas.md` and clears the chat.
+- Chat memory only sends your last N messages.
+
+## Folders
+Everything is saved to local disk. On Streamlit Community Cloud, files are deleted on restart;
+to use it from your phone in the cloud, `storage.py` has to be replaced with a version that saves to Google Drive
+(next stage).
