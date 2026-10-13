@@ -27,8 +27,12 @@ import pandas as pd
 ROUTE_COLS = ["Ciudad", "País", "Llegada", "Salida", "Hotel", "Notas"]
 DATE_COLS = ["Llegada", "Salida"]
 
+STATIC_FICHAS = Path(__file__).parent / "data" / "fichas"
+
 DEFAULT_CONFIG = {
     "agent_name": "Nómada",
+    "engine": "gemini",
+    "gemini_model": "gemini-2.5-flash",
     "model": "claude-sonnet-5-5",
     "max_searches": 5,
     "ficha_searches": 8,
@@ -187,13 +191,17 @@ class TripStore:
 
     # ---------- fichas de país (compartidas entre viajes) ----------
     def load_ficha(self, iso: str) -> dict | None:
-        p = self.root / "_fichas" / f"{iso.upper()}.json"
-        if not p.exists():
-            return None
-        try:
-            return json.loads(p.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            return None
+        """Primero la ficha actualizada por el usuario (viajes/_fichas); si no hay, la ficha base del repositorio (data/fichas)."""
+        for p in (self.root / "_fichas" / f"{iso.upper()}.json", STATIC_FICHAS / f"{iso.upper()}.json"):
+            if p.exists():
+                try:
+                    return json.loads(p.read_text(encoding="utf-8"))
+                except json.JSONDecodeError:
+                    continue
+        return None
+
+    def static_isos(self) -> set[str]:
+        return {p.stem.upper() for p in STATIC_FICHAS.glob("*.json")} if STATIC_FICHAS.exists() else set()
 
     def save_ficha(self, iso: str, data: dict) -> None:
         d = self.root / "_fichas"

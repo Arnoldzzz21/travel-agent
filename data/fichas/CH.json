@@ -1,0 +1,135 @@
+{
+  "moneda": {
+    "codigo_local": "CHF",
+    "mostrada_en": "CHF",
+    "nota": "Suiza usa francos suizos (CHF), no euros."
+  },
+  "resumen": "Transporte público puntual y caro. Conviene comparar el Swiss Travel Pass, el Half Fare Card y los billetes sueltos según cuántos trenes y montañas vayas a usar.",
+  "transporte": [
+    {
+      "medio": "Billete sencillo urbano (Zúrich, Berna...)",
+      "util_para": "Moverse dentro de una ciudad",
+      "precio": "CHF 4.50–CHF 5",
+      "aproximado": true,
+      "nota": "Hay pases de día más baratos si usarás varias veces."
+    },
+    {
+      "medio": "Aeropuerto de Zúrich → estación central",
+      "util_para": "Tren (≈ 10 minutos)",
+      "precio": "≈ CHF 7–CHF 8",
+      "aproximado": true,
+      "nota": ""
+    },
+    {
+      "medio": "Tren entre ciudades (SBB)",
+      "util_para": "Zúrich–Ginebra, Berna, Lucerna",
+      "precio": "CHF 30–CHF 90",
+      "aproximado": true,
+      "nota": "El precio sube con la distancia; el Saver Day Pass sale más barato si compras con anticipación."
+    },
+    {
+      "medio": "Trenes panorámicos y de montaña (Jungfraujoch)",
+      "util_para": "Excursiones",
+      "precio": "≈ CHF 230 ida y vuelta desde Interlaken",
+      "aproximado": true,
+      "nota": "Con el Swiss Travel Pass se obtiene un descuento de ~25 %; con el Half Fare Card, ~50 % en muchos tramos."
+    },
+    {
+      "medio": "Taxi",
+      "util_para": "Evítalo salvo emergencia",
+      "precio": "CHF 6–CHF 8 de bajada + ≈ CHF 3.80/km",
+      "aproximado": true,
+      "nota": "Muy caro."
+    }
+  ],
+  "tarjetas_y_pases": [
+    {
+      "nombre": "Swiss Half Fare Card",
+      "para": "todos",
+      "precio": "CHF 150 (antes CHF 120; subió en 2026)",
+      "vigencia": "1 mes",
+      "requisitos": "Da ~50 % en trenes, buses, barcos y muchos teleféricos",
+      "donde_comprar": "SBB en línea y estaciones",
+      "url": "https://www.travelswitzerland.com/price-adjustments-in-swiss-public-transport-from-2026/"
+    },
+    {
+      "nombre": "Swiss Travel Pass",
+      "para": "turista",
+      "precio": "≈ 3 días CHF 245 · 4 días CHF 295 · 6 días CHF 375 · 8 días CHF 420 · 15 días CHF 480 (2.ª clase; aprox.)",
+      "vigencia": "3, 4, 6, 8 o 15 días consecutivos o Flex",
+      "requisitos": "Para visitantes; incluye transporte y muchos museos. Subió ~5 % de promedio en 2026.",
+      "donde_comprar": "Swiss Travel System / SBB",
+      "url": "https://www.travelswitzerland.com/price-adjustments-in-swiss-public-transport-from-2026/"
+    },
+    {
+      "nombre": "Saver Day Pass",
+      "para": "todos",
+      "precio": "Desde ≈ CHF 52 (según demanda; aprox.)",
+      "vigencia": "1 día",
+      "requisitos": "Se compra con anticipación y se agota",
+      "donde_comprar": "SBB en línea",
+      "url": ""
+    },
+    {
+      "nombre": "GA Travelcard (abono general)",
+      "para": "residente",
+      "precio": "≈ CHF 3,995 al año (2.ª clase; aprox.)",
+      "vigencia": "1 año",
+      "requisitos": "Para residentes o estancias largas",
+      "donde_comprar": "SBB",
+      "url": ""
+    }
+  ],
+  "pago": {
+    "tarjeta_en_transporte": "Máquinas y la app SBB aceptan tarjeta y wallets; los torniquetes casi no existen: se compra billete antes de subir.",
+    "tarjeta_en_comercios": "Muy aceptada, incluida la mayoría de restaurantes y tiendas; también se usa TWINT (para residentes).",
+    "efectivo": "Útil en cabañas de montaña, algunos puestos y propinas. Algunos sitios turísticos aceptan euros a mal cambio: paga en CHF.",
+    "contactless_y_wallet": "Apple Pay y Google Pay funcionan en la mayoría de comercios."
+  },
+  "precios_tipicos": [
+    {
+      "concepto": "Café",
+      "precio": "CHF 4.50–CHF 5.50",
+      "aproximado": true
+    },
+    {
+      "concepto": "Comida económica (supermercado Migros/Coop, kebab)",
+      "precio": "CHF 10–CHF 16",
+      "aproximado": true
+    },
+    {
+      "concepto": "Plato en restaurante",
+      "precio": "CHF 25–CHF 40",
+      "aproximado": true
+    },
+    {
+      "concepto": "Cena en restaurante medio",
+      "precio": "CHF 45–CHF 70",
+      "aproximado": true
+    },
+    {
+      "concepto": "Hotel medio por noche",
+      "precio": "CHF 180–CHF 300",
+      "aproximado": true
+    }
+  ],
+  "consejos": [
+    "Compara tu itinerario: Half Fare Card + billetes suele ser mejor que el Swiss Travel Pass si harás pocos trayectos largos.",
+    "Los supermercados Migros y Coop tienen comida lista económica.",
+    "El agua de la llave es potable y gratuita en fuentes."
+  ],
+  "fuentes": [
+    {
+      "titulo": "TravelSwitzerland: ajustes de precios 2026",
+      "url": "https://www.travelswitzerland.com/price-adjustments-in-swiss-public-transport-from-2026/"
+    },
+    {
+      "titulo": "Swiss Half Fare Card",
+      "url": "https://www.swiss-pass.ch/?p=27"
+    }
+  ],
+  "pais_iso": "CH",
+  "fecha_consulta": "2026-10-12",
+  "_estatica": true,
+  "_calidad": "Ficha base investigada en guías y sitios de 2026; los precios marcados «aprox.» son estimaciones. Confirma en el sitio oficial antes de comprar. Los precios del Swiss Travel Pass son aproximados; el valor exacto está en sbb.ch."
+}

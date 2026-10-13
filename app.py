@@ -14,6 +14,7 @@ from streamlit_folium import st_folium
 
 import agent
 import ficha as ficha_mod
+import gemini as gem
 import tools as T
 import ui
 from countries import SUBREGIONS, load_countries
@@ -40,14 +41,46 @@ CAT_COLORS = {"comida": "#E67E22", "turismo": "#6C5CE7", "transporte": "#2D98DA"
 
 
 # ============================================================ utilidades
-def get_api_key() -> str | None:
-    key = st.session_state.get("api_key_input") or os.environ.get("ANTHROPIC_API_KEY")
-    if not key:
-        try:
-            key = st.secrets.get("ANTHROPIC_API_KEY")
-        except Exception:
-            key = None
-    return key or None
+ENGINES = {"✨ Gemini (gratis)": "gemini", "🧠 Claude (API de pago)": "claude"}
+ENGINE_NAME = {"gemini": "Gemini", "claude": "Claude"}
+KEY_SPEC = {  # motor -> (campo de la barra lateral, variables de entorno / secretos)
+    "gemini": ("gemini_key_input", ("GEMINI_API_KEY", "GOOGLE_API_KEY")),
+    "claude": ("api_key_input", ("ANTHROPIC_API_KEY",)),
+}
+
+
+def _env_key(engine: str) -> str | None:
+    """Clave del entorno o de los secretos de Streamlit (no la escrita en la barra lateral)."""
+    for name in KEY_SPEC[engine][1]:
+        v = os.environ.get(name)
+        if not v:
+            try:
+                v = st.secrets.get(name)
+            except Exception:
+                v = None
+        if v:
+            return str(v)
+    return None
+
+
+def get_api_key(engine: str | None = None) -> str | None:
+    engine = engine or cfg["engine"]
+    return st.session_state.get(KEY_SPEC[engine][0]) or _env_key(engine) or None
+
+
+def _keep_key(field: str) -> None:
+    """Copia la clave escrita a una variable que no se borra al cambiar de motor (Streamlit olvida los campos que no se dibujan)."""
+    st.session_state[field] = st.session_state.get("_in_" + field, "")
+
+
+def make_client(engine: str, key: str, timeout: int = 180):
+    if engine == "gemini":
+        return gem.GeminiClient(key, timeout=timeout)
+    return anthropic.Anthropic(api_key=key, max_retries=2, timeout=timeout)
+
+
+def active_model() -> str:
+    return cfg["gemini_model"] if cfg["engine"] == "gemini" else cfg["model"]
 
 
 def bump(name: str) -> None:
@@ -79,24 +112,38 @@ def sidebar(slug: str | None) -> None:
     with st.sidebar:
         st.header("⚙️ Ajustes")
         name = st.text_input("Nombre de tu agente", cfg["agent_name"])
-        labels = list(agent.MODELS)
-        ids = list(agent.MODELS.values())
-        idx = ids.index(cfg["model"]) if cfg["model"] in ids else 0
-        label = st.selectbox("Modelo", labels, index=idx)
-        searches = st.slider("Búsquedas web por respuesta", 0, 10, int(cfg["max_searches"]), help="Cada búsqueda web se cobra aparte. 0 las desactiva.")
-        fsearch = st.slider("Búsquedas web por ficha de país", 2, 15, int(cfg["ficha_searches"]), help="La ficha de transporte y precios se guarda; solo se vuelve a gastar al actualizarla.")
-        turns = st.slider("Memoria del chat (tus últimos mensajes)", 2, 20, int(cfg["history_turns"]), help="Menos memoria = respuestas más enfocadas y más baratas.")
-        new = {"agent_name": name.strip() or "Nómada", "model": agent.MODELS[label], "max_searches": searches, "ficha_searches": fsearch, "history_turns": turns}
+        eng_labels = list(ENGINES)
+        eng_label = st.radio("Motor del chat", eng_labels, index=list(ENGINES.values()).index(cfg["engine"]) if cfg["engine"] in ENGINES.values() else 0,
+                             help="Gemini tiene capa gratuita (incluye búsqueda en Google). Claude necesita crédito de API.")
+        engine = ENGINES[eng_label]
+        new = {"agent_name": name.strip() or "Nómada", "engine": engine}
+        if engine == "gemini":
+            glabels, gids = list(gem.MODELS), list(gem.MODELS.values())
+            glabel = st.selectbox("Modelo de Gemini", glabels, index=gids.index(cfg["gemini_model"]) if cfg["gemini_model"] in gids else 0)
+            new["gemini_model"] = gem.MODELS[glabel]
+            searches = st.slider("Búsquedas en Google por respuesta", 0, 6, min(int(cfg["max_searches"]), 6), help="Gratis hasta unas 500 al día con Gemini 2.5. 0 las desactiva.")
+        else:
+            labels, ids = list(agent.MODELS), list(agent.MODELS.values())
+            label = st.selectbox("Modelo de Claude", labels, index=ids.index(cfg["model"]) if cfg["model"] in ids else 0)
+            new["model"] = agent.MODELS[label]
+            searches = st.slider("Búsquedas web por respuesta", 0, 10, int(cfg["max_searches"]), help="Cada búsqueda web se cobra aparte. 0 las desactiva.")
+            new["ficha_searches"] = st.slider("Búsquedas web por ficha de país", 2, 15, int(cfg["ficha_searches"]), help="La ficha se guarda; solo se vuelve a gastar al actualizarla.")
+        new["max_searches"] = searches
+        new["history_turns"] = st.slider("Memoria del chat (tus últimos mensajes)", 2, 20, int(cfg["history_turns"]), help="Menos memoria = respuestas más enfocadas y menos consumo.")
         if any(cfg.get(k) != v for k, v in new.items()):
             cfg.update(new)
             store.save_config(cfg)
             changed = True
 
         st.divider()
-        if not (os.environ.get("ANTHROPIC_API_KEY") or _has_secret()):
-            st.text_input("Clave de Anthropic (solo esta sesión)", type="password", key="api_key_input", help="Créala en console.anthropic.com y fija un límite de gasto mensual allí.")
+        field = KEY_SPEC[engine][0]
+        if _env_key(engine):
+            st.caption(f"🔑 Clave de {ENGINE_NAME[engine]} cargada desde el entorno.")
+        elif engine == "gemini":
+            st.text_input("Clave de Gemini (solo esta sesión)", type="password", key="_in_" + field, value=st.session_state.get(field, ""), on_change=_keep_key, args=(field,), help="Gratis en aistudio.google.com/apikey (Get API key). No la compartas con nadie.")
+            st.caption("🔒 En el plan gratis, Google puede usar lo que envíes para mejorar sus productos: no escribas datos personales sensibles.")
         else:
-            st.caption("🔑 Clave de Anthropic cargada desde el entorno.")
+            st.text_input("Clave de Anthropic (solo esta sesión)", type="password", key="_in_" + field, value=st.session_state.get(field, ""), on_change=_keep_key, args=(field,), help="Se crea en console.anthropic.com y requiere saldo. La suscripción gratuita de claude.ai no incluye API.")
         if st.button("🧹 Vaciar caché de ubicaciones", width="stretch"):
             geo.clear()
             st.toast("Caché de ubicaciones vaciado")
@@ -107,13 +154,6 @@ def sidebar(slug: str | None) -> None:
         ui.brand_footer(sidebar=True)
     if changed:
         st.rerun()
-
-
-def _has_secret() -> bool:
-    try:
-        return bool(st.secrets.get("ANTHROPIC_API_KEY"))
-    except Exception:
-        return False
 
 
 # ============================================================ pantalla de bienvenida
@@ -202,21 +242,27 @@ def page_ficha(slug: str, meta: dict, iso: str) -> None:
         return
     inside = c.es in set(meta.get("paises", []))
     st.button("← Volver a países", on_click=close_ficha, key="fic_back")
+    engine = cfg["engine"]
     key = get_api_key()
     ficha = store.load_ficha(iso)
     desc = _s((ficha or {}).get("resumen")) if ficha and not ficha.get("_sin_formato") else ""
     ui.detail_header(c, inside, desc or f"Consulta transporte, tarjetas y pases para turistas y residentes, formas de pago y precios típicos de {c.es}. Los precios van en {c.display_currency}.")
     b1, b2 = st.columns(2)
     b1.button("Quitar del viaje" if inside else "＋ Agregar al viaje", key="fic_toggle", on_click=toggle_country, args=(slug, c.es), type="primary" if inside else "secondary", width="stretch")
-    go = b2.button("🔄 Actualizar precios y transporte" if ficha else "🔎 Consultar precios y transporte", key="fic_go", width="stretch", disabled=not key)
+    go = b2.button("🔄 Actualizar con la web" if ficha else "🔎 Consultar precios y transporte", key="fic_go", width="stretch", disabled=not key)
     if not key:
-        st.caption("Para consultar la web pega tu clave de Anthropic en ⚙️ Ajustes.")
+        st.caption(f"Para buscar en la web pega tu clave de {ENGINE_NAME[engine]} en ⚙️ Ajustes." + (" Es gratis en aistudio.google.com/apikey." if engine == "gemini" else ""))
     if go:
-        with st.spinner(f"Buscando transporte, tarjetas y precios de {c.es} en la web… (puede tardar 1–2 minutos)"):
+        with st.spinner(f"Buscando transporte, tarjetas y precios de {c.es} con {ENGINE_NAME[engine]}… (puede tardar 1–2 minutos)"):
             try:
-                client = anthropic.Anthropic(api_key=key, max_retries=2, timeout=300)
-                ficha = ficha_mod.generate_ficha(client, cfg["model"], c, int(cfg["ficha_searches"]))
+                if engine == "gemini":
+                    ficha = gem.generate_ficha(make_client(engine, key, 300), cfg["gemini_model"], c)
+                else:
+                    ficha = ficha_mod.generate_ficha(make_client(engine, key, 300), cfg["model"], c, int(cfg["ficha_searches"]))
+                    ficha["_motor"] = "claude"
                 store.save_ficha(iso, ficha)
+            except gem.GeminiError as e:
+                st.error(gem.friendly(e))
             except anthropic.AuthenticationError:
                 st.error("La clave de Anthropic no es válida.")
             except anthropic.APIError as e:
@@ -233,6 +279,10 @@ def render_ficha(c, f: dict) -> None:
         st.markdown(_s(f.get("resumen")))
         return
     mon = f.get("moneda") or {}
+    if f.get("_estatica"):
+        st.caption("📚 Ficha base de la app, investigada en guías y sitios oficiales. Puedes actualizarla con la web.")
+    elif f.get("_motor"):
+        st.caption(f"🤖 Actualizada con búsqueda web usando {ENGINE_NAME.get(f['_motor'], f['_motor'])}.")
     st.caption(f"Consultado el {_s(f.get('fecha_consulta'))} · Moneda local: {_s(mon.get('codigo_local')) or c.currency} · Precios en: {_s(mon.get('mostrada_en')) or c.display_currency}"
                + (f" · {_s(mon.get('nota'))}" if _s(mon.get("nota")) else ""))
     t1, t2, t3, t4, t5 = st.tabs(["🚆 Transporte", "🎫 Tarjetas y pases", "💳 Pagos", "🍽️ Precios", "🔗 Fuentes"])
@@ -440,38 +490,53 @@ def page_map(slug: str, route: pd.DataFrame, places: list[dict]) -> None:
 
 
 # ============================================================ Chat
+def seed_history(engine: str, display: list[dict]) -> list[dict]:
+    """Reconstruye el historial de un motor a partir de lo mostrado (al cambiar de motor a mitad de conversación)."""
+    if engine == "gemini":
+        return [{"role": "user" if m["role"] == "user" else "model", "parts": [{"text": m["text"]}]} for m in display]
+    return [{"role": m["role"], "content": m["text"]} for m in display]
+
+
 def page_chat(slug: str, meta: dict, route: pd.DataFrame, places: list[dict]) -> None:
     chat = st.session_state.get("chat")
     if not chat or chat["slug"] != slug:
-        chat = st.session_state["chat"] = {"slug": slug, "messages": [], "display": [], "in": 0, "out": 0, "searches": 0}
+        chat = st.session_state["chat"] = {"slug": slug, "messages": [], "gmessages": [], "display": [], "in": 0, "out": 0, "searches": 0}
+    engine = cfg["engine"]
+    hist_key = "gmessages" if engine == "gemini" else "messages"
     key = get_api_key()
     name = cfg["agent_name"]
+    eng = ENGINE_NAME[engine]
 
     c1, c2 = st.columns(2)
     clear = c1.button("🧹 Nueva conversación", width="stretch", help="Vacía el chat; tu ruta, lugares y notas se conservan.")
     summ = c2.button("📝 Resumir y limpiar", width="stretch", disabled=not (key and chat["display"]), help="Guarda un resumen en las notas del viaje y vacía el chat.")
     if clear:
-        chat.update(messages=[], display=[])
+        chat.update(messages=[], gmessages=[], display=[])
         st.rerun()
     if summ:
         with st.spinner("Resumiendo…"):
             try:
-                client = anthropic.Anthropic(api_key=key, max_retries=2, timeout=120)
-                text = agent.summarize(client, cfg["model"], chat["display"])
+                client = make_client(engine, key, 120)
+                text = gem.summarize(client, cfg["gemini_model"], chat["display"]) if engine == "gemini" else agent.summarize(client, cfg["model"], chat["display"])
                 store.append_note(slug, text)
-                chat.update(messages=[], display=[])
+                chat.update(messages=[], gmessages=[], display=[])
                 st.toast("Resumen guardado en las notas del viaje")
                 st.rerun()
+            except gem.GeminiError as e:
+                st.error(gem.friendly(e))
             except anthropic.APIError as e:
                 st.error(f"No pude resumir: {e}")
 
     if not key:
-        st.info("Para chatear pega tu clave de Anthropic en ⚙️ Ajustes (barra lateral). El resto de la app funciona sin ella.")
+        if engine == "gemini":
+            st.info("Para chatear con Gemini pega tu clave gratuita en ⚙️ Ajustes (barra lateral): se crea en aistudio.google.com/apikey. El resto de la app, incluidas las fichas base de cada país, funciona sin ella.")
+        else:
+            st.info("Para chatear con Claude pega tu clave de Anthropic en ⚙️ Ajustes (barra lateral). El resto de la app funciona sin ella.")
 
     if not chat["display"]:
         st.caption(f"Pregúntale a {name}:")
-        for s in ["¿Cuál es el mejor transporte en la ciudad de mi próxima parada y cuánto cuesta?", "Dónde comer bien y barato en mi próxima parada", "Arma el recorrido de un día con precios de entradas"]:
-            st.button(s, key=f"sug_{s[:20]}", on_click=lambda v=s: st.session_state.update(pending_prompt=v), disabled=not key)
+        for sug in ["¿Cuál es el mejor transporte en la ciudad de mi próxima parada y cuánto cuesta?", "Dónde comer bien y barato en mi próxima parada", "Arma el recorrido de un día con precios de entradas"]:
+            st.button(sug, key=f"sug_{sug[:20]}", on_click=lambda v=sug: st.session_state.update(pending_prompt=v), disabled=not key)
 
     for m in chat["display"]:
         with st.chat_message(m["role"], avatar="🧑‍💻" if m["role"] == "user" else "🧭"):
@@ -482,6 +547,9 @@ def page_chat(slug: str, meta: dict, route: pd.DataFrame, places: list[dict]) ->
     usage_ph = st.empty()
     prompt = st.chat_input(f"Escríbele a {name}…", disabled=not key) or st.session_state.pop("pending_prompt", None)
     if prompt and key:
+        if chat["display"] and (not chat[hist_key] or chat.get("last_engine", engine) != engine):  # cambio de motor: conserva el contexto ya mostrado
+            chat[hist_key] = seed_history(engine, chat["display"])
+        chat["last_engine"] = engine
         chat["display"].append({"role": "user", "text": prompt})
         with st.chat_message("user", avatar="🧑‍💻"):
             st.markdown(prompt)
@@ -492,13 +560,18 @@ def page_chat(slug: str, meta: dict, route: pd.DataFrame, places: list[dict]) ->
             [f"- {p['nombre']} ({p.get('ciudad', '')}, {p.get('categoria', '')}) {p.get('precio') or ''} {p.get('moneda') or ''}" for p in places[:40]],
             store.read_notes(slug),
         )
-        n0 = len(chat["messages"])
-        chat["messages"].append({"role": "user", "content": prompt})
+        hist = chat[hist_key]
+        n0 = len(hist)
+        hist.append(gem.user_msg(prompt) if engine == "gemini" else {"role": "user", "content": prompt})
         with st.chat_message("assistant", avatar="🧭"):
             status = st.status(f"{name} está pensando…", expanded=False)
             try:
-                client = anthropic.Anthropic(api_key=key, max_retries=2, timeout=180)
-                res = agent.run_agent(client, cfg["model"], system, chat["messages"], ctx, cfg["max_searches"], cfg["history_turns"], on_tool=lambda n, a: status.write(f"🔧 {n}"))
+                client = make_client(engine, key, 180)
+                on_tool = lambda n, a: status.write(f"🔧 {n}")
+                if engine == "gemini":
+                    res = gem.run_agent(client, cfg["gemini_model"], system, hist, ctx, cfg["max_searches"], cfg["history_turns"], on_tool=on_tool)
+                else:
+                    res = agent.run_agent(client, cfg["model"], system, hist, ctx, cfg["max_searches"], cfg["history_turns"], on_tool=on_tool)
                 status.update(label="Listo", state="complete")
                 st.markdown(res.text)
                 chat["display"].append({"role": "assistant", "text": res.text, "tools": sorted(set(res.tools_used))})
@@ -508,19 +581,19 @@ def page_chat(slug: str, meta: dict, route: pd.DataFrame, places: list[dict]) ->
                 if ctx.changed:
                     bump("route_ver")
                     bump("places_ver")
-            except anthropic.AuthenticationError:
-                del chat["messages"][n0:]
+            except (gem.GeminiError, anthropic.AuthenticationError, anthropic.RateLimitError, anthropic.APIError) as e:
+                del hist[n0:]
+                chat["display"].pop()  # no dejar la pregunta sin respuesta en el historial mostrado
                 status.update(label="Error", state="error")
-                st.error("La clave de Anthropic no es válida.")
-            except anthropic.RateLimitError:
-                del chat["messages"][n0:]
-                status.update(label="Error", state="error")
-                st.error("Límite de uso alcanzado. Espera un momento e inténtalo de nuevo.")
-            except anthropic.APIError as e:
-                del chat["messages"][n0:]
-                status.update(label="Error", state="error")
-                st.error(f"Error de la API: {e}")
-    usage_ph.caption(f"Memoria: últimos {cfg['history_turns']} mensajes tuyos · {chat['in'] + chat['out']:,} tokens usados en esta conversación")
+                if isinstance(e, gem.GeminiError):
+                    st.error(gem.friendly(e))
+                elif isinstance(e, anthropic.AuthenticationError):
+                    st.error("La clave de Anthropic no es válida.")
+                elif isinstance(e, anthropic.RateLimitError):
+                    st.error("Límite de uso alcanzado. Espera un momento e inténtalo de nuevo.")
+                else:
+                    st.error(f"Error de la API de Claude: {e}")
+    usage_ph.caption(f"{eng} · memoria: últimos {cfg['history_turns']} mensajes tuyos · {chat['in'] + chat['out']:,} tokens usados en esta conversación")
 
 
 # ============================================================ main

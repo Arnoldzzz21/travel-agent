@@ -1,0 +1,138 @@
+{
+  "moneda": {
+    "codigo_local": "EUR",
+    "mostrada_en": "EUR",
+    "nota": ""
+  },
+  "resumen": "En París conviene usar la tarjeta Navigo Easy o los pases para visitantes; no se puede entrar al metro tocando la tarjeta bancaria. Entre ciudades hay TGV y trenes baratos si se compra con tiempo.",
+  "transporte": [
+    {
+      "medio": "Metro, RER y tren (Île-de-France)",
+      "util_para": "Moverse por París y alrededores",
+      "precio": "€2.55 por viaje",
+      "aproximado": false,
+      "nota": "El billete de papel t+ sencillo ya no se vende: se carga en Navigo Easy o en la app. Toda la región es una sola zona para los billetes básicos."
+    },
+    {
+      "medio": "Bus y tranvía",
+      "util_para": "Conexiones sin metro",
+      "precio": "€2.05 por viaje",
+      "aproximado": false,
+      "nota": ""
+    },
+    {
+      "medio": "Pase de día",
+      "util_para": "Muchos viajes en un día",
+      "precio": "€12.30",
+      "aproximado": false,
+      "nota": ""
+    },
+    {
+      "medio": "Aeropuertos CDG / Orly → París",
+      "util_para": "RER B (CDG) · Metro 14 u Orlyval (Orly)",
+      "precio": "€14 tarifa única",
+      "aproximado": false,
+      "nota": "Verifica la tarifa vigente en Île-de-France Mobilités."
+    },
+    {
+      "medio": "TGV / trenes de larga distancia (SNCF)",
+      "util_para": "París–Lyon, Marsella, Burdeos",
+      "precio": "€25–€110",
+      "aproximado": true,
+      "nota": "Mucho más barato con anticipación; OUIGO (low-cost) desde ≈ €10–€25."
+    },
+    {
+      "medio": "Taxi desde CDG (tarifa fija)",
+      "util_para": "Con equipaje o de noche",
+      "precio": "≈ €56 (Margen derecha) · ≈ €65 (Margen izquierda)",
+      "aproximado": true,
+      "nota": ""
+    }
+  ],
+  "tarjetas_y_pases": [
+    {
+      "nombre": "Navigo Easy",
+      "para": "todos",
+      "precio": "Tarjeta €2 + saldo de billetes",
+      "vigencia": "Recargable",
+      "requisitos": "Ninguno; se compra sin foto",
+      "donde_comprar": "Máquinas en estaciones y estancos",
+      "url": ""
+    },
+    {
+      "nombre": "Paris Visite",
+      "para": "turista",
+      "precio": "1 día €30.60 · 2 días €45.40 · 3 días €63.80 · 5 días €78",
+      "vigencia": "1–5 días",
+      "requisitos": "Incluye traslados al aeropuerto",
+      "donde_comprar": "Estaciones y puntos oficiales",
+      "url": "https://www.european-traveler.com/france/guide-to-paris-public-transport-tickets-and-prices-for-visitors/"
+    },
+    {
+      "nombre": "Navigo semanal / mensual",
+      "para": "residente",
+      "precio": "Semana €32.40 · Mes €90.80",
+      "vigencia": "Semana de lunes a domingo / mes calendario",
+      "requisitos": "Requiere tarjeta Navigo con foto (Navigo Découverte para no residentes). Los residentes pueden contratar la suscripción anual.",
+      "donde_comprar": "Oficinas Île-de-France Mobilités",
+      "url": ""
+    }
+  ],
+  "pago": {
+    "tarjeta_en_transporte": "En París el sistema NO acepta tocar la tarjeta bancaria en el torniquete: necesitas Navigo Easy, billete en la app o un pase.",
+    "tarjeta_en_comercios": "Tarjeta aceptada casi en todas partes; en cafés pequeños puede haber monto mínimo.",
+    "efectivo": "Útil en mercados, baños públicos y algunos puestos callejeros.",
+    "contactless_y_wallet": "Apple Pay y Google Pay se aceptan en comercios y en las máquinas de transporte."
+  },
+  "precios_tipicos": [
+    {
+      "concepto": "Café en la barra / en terraza",
+      "precio": "€1.50–€2.50 / €3–€5",
+      "aproximado": true
+    },
+    {
+      "concepto": "Menú del día",
+      "precio": "€15–€22",
+      "aproximado": true
+    },
+    {
+      "concepto": "Cena en restaurante medio",
+      "precio": "€30–€50",
+      "aproximado": true
+    },
+    {
+      "concepto": "Croissant o baguette",
+      "precio": "€1.20–€2",
+      "aproximado": true
+    },
+    {
+      "concepto": "Louvre (visitante de fuera de la UE/EEE)",
+      "precio": "≈ €32 (subió en 2026; confirma en el sitio oficial)",
+      "aproximado": true
+    },
+    {
+      "concepto": "Hotel medio por noche",
+      "precio": "€120–€200",
+      "aproximado": true
+    }
+  ],
+  "consejos": [
+    "Compra Navigo Easy el primer día: ahorra filas y evita el billete de papel.",
+    "Reserva con hora la Torre Eiffel y el Louvre.",
+    "Valida siempre tu billete: las multas por no hacerlo son altas."
+  ],
+  "fuentes": [
+    {
+      "titulo": "European Traveler: guía de transporte de París 2026",
+      "url": "https://www.european-traveler.com/france/guide-to-paris-public-transport-tickets-and-prices-for-visitors/"
+    },
+    {
+      "titulo": "Free Walking Tour: transporte en París 2026-2027",
+      "url": "https://freewalkingtour.com/blog/public-transport-in-paris-2026-2027-what-s-new-and-how-to-get-around/"
+    }
+  ],
+  "pais_iso": "FR",
+  "fecha_consulta": "2026-10-12",
+  "_estatica": true,
+  "_calidad": "Ficha base investigada en guías y sitios de 2026; los precios marcados «aprox.» son estimaciones. Confirma en el sitio oficial antes de comprar."
+}

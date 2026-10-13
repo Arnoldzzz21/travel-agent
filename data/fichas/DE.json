@@ -1,0 +1,148 @@
+{
+  "moneda": {
+    "codigo_local": "EUR",
+    "mostrada_en": "EUR",
+    "nota": ""
+  },
+  "resumen": "El Deutschlandticket cubre todo el transporte local y regional del país por un mes. Los trenes de larga distancia (ICE/IC) se compran aparte y son mucho más baratos con anticipación.",
+  "transporte": [
+    {
+      "medio": "Deutschlandticket (transporte local y regional)",
+      "util_para": "Metro, tranvía, bus, S-Bahn y trenes regionales de todo el país",
+      "precio": "€63 al mes (desde enero 2026; antes €58)",
+      "aproximado": false,
+      "nota": "No incluye ICE/IC ni FlixTrain. Suscripción mensual cancelable."
+    },
+    {
+      "medio": "Billete sencillo en Berlín (BVG, zona AB)",
+      "util_para": "Una ciudad grande",
+      "precio": "≈ €3.50–€3.80",
+      "aproximado": true,
+      "nota": "Hay tarjetas de 4 viajes y de 24 horas."
+    },
+    {
+      "medio": "Billete sencillo en Múnich (MVV)",
+      "util_para": "Una ciudad grande",
+      "precio": "≈ €4",
+      "aproximado": true,
+      "nota": ""
+    },
+    {
+      "medio": "ICE / IC (Deutsche Bahn, larga distancia)",
+      "util_para": "Berlín–Múnich, Fráncfort, Hamburgo",
+      "precio": "Sparpreis desde ≈ €17.90 · tarifa flexible ≈ €100–€150",
+      "aproximado": true,
+      "nota": "Cuanto antes compres, más barato."
+    },
+    {
+      "medio": "FlixBus / FlixTrain",
+      "util_para": "Larga distancia low-cost",
+      "precio": "€10–€40",
+      "aproximado": true,
+      "nota": ""
+    },
+    {
+      "medio": "Traslado del aeropuerto al centro (S-Bahn)",
+      "util_para": "Aeropuertos de Múnich, Berlín y Fráncfort",
+      "precio": "≈ €4–€14",
+      "aproximado": true,
+      "nota": ""
+    }
+  ],
+  "tarjetas_y_pases": [
+    {
+      "nombre": "Deutschlandticket",
+      "para": "todos",
+      "precio": "€63 al mes",
+      "vigencia": "Mensual, cancelable",
+      "requisitos": "Se compra en el app DB Navigator o de operadores locales. Algunos pedirán débito SEPA; confirma si aceptan tu tarjeta de otro país.",
+      "donde_comprar": "App DB Navigator / app del operador local",
+      "url": "https://www.tageskarte.io/tourismus/detail/deutschlandticket-soll-ab-2026-63-euro-kosten.html"
+    },
+    {
+      "nombre": "Semesterticket / ticket para estudiantes",
+      "para": "residente",
+      "precio": "Incluido en la matrícula en muchas universidades",
+      "vigencia": "Semestre",
+      "requisitos": "Estar matriculado",
+      "donde_comprar": "Universidad",
+      "url": ""
+    },
+    {
+      "nombre": "Tarjetas de 4 viajes / 24 h por ciudad",
+      "para": "turista",
+      "precio": "Según ciudad",
+      "vigencia": "Por día",
+      "requisitos": "Ninguno",
+      "donde_comprar": "Máquinas y apps locales",
+      "url": ""
+    }
+  ],
+  "pago": {
+    "tarjeta_en_transporte": "Se puede comprar por app o máquina; tocar la tarjeta bancaria en el torniquete casi no existe.",
+    "tarjeta_en_comercios": "Alemania usa más el efectivo y la tarjeta girocard que otros países: Visa/Mastercard se aceptan en hoteles y tiendas grandes, pero en panaderías, cafés y restaurantes pequeños puede que no.",
+    "efectivo": "Imprescindible en muchos comercios pequeños, mercados y algunos restaurantes.",
+    "contactless_y_wallet": "Apple Pay y Google Pay crecen, pero no están en todas partes."
+  },
+  "precios_tipicos": [
+    {
+      "concepto": "Currywurst o bratwurst",
+      "precio": "€4–€6",
+      "aproximado": true
+    },
+    {
+      "concepto": "Döner kebab",
+      "precio": "€6–€8",
+      "aproximado": true
+    },
+    {
+      "concepto": "Cerveza (0.5 L) en bar",
+      "precio": "€4–€6",
+      "aproximado": true
+    },
+    {
+      "concepto": "Almuerzo económico",
+      "precio": "€10–€15",
+      "aproximado": true
+    },
+    {
+      "concepto": "Cena en restaurante medio",
+      "precio": "€20–€35",
+      "aproximado": true
+    },
+    {
+      "concepto": "Museo",
+      "precio": "€8–€20",
+      "aproximado": true
+    },
+    {
+      "concepto": "Hotel medio por noche",
+      "precio": "€100–€160",
+      "aproximado": true
+    }
+  ],
+  "consejos": [
+    "Lleva efectivo: en Alemania todavía mucha gente paga así.",
+    "Valida el billete antes de subir si es de papel y revisa si necesita sello.",
+    "Compra los trenes de larga distancia con semanas de anticipación.",
+    "Los domingos casi todo cierra, incluidas muchas tiendas."
+  ],
+  "fuentes": [
+    {
+      "titulo": "Deutsche Bahn: Deutschlandticket",
+      "url": "https://int.bahn.de/en/faq/deutschlandticket-cost-new"
+    },
+    {
+      "titulo": "Tageskarte: Deutschlandticket costará €63 desde 2026",
+      "url": "https://www.tageskarte.io/tourismus/detail/deutschlandticket-soll-ab-2026-63-euro-kosten.html"
+    },
+    {
+      "titulo": "Auto Motor und Sport: Deutschlandticket 2026",
+      "url": "https://www.auto-motor-und-sport.de/verkehr/deutschlandticket-2026-der-preis-steigt-um-5-euro/"
+    }
+  ],
+  "pais_iso": "DE",
+  "fecha_consulta": "2026-10-12",
+  "_estatica": true,
+  "_calidad": "Ficha base investigada en guías y sitios de 2026; los precios marcados «aprox.» son estimaciones. Confirma en el sitio oficial antes de comprar."
+}

@@ -1,0 +1,136 @@
+{
+  "moneda": {
+    "codigo_local": "EUR",
+    "mostrada_en": "EUR",
+    "nota": ""
+  },
+  "resumen": "Atenas tiene metro, tranvía y buses con un mismo billete de 90 minutos. Se puede pagar con Visa o Mastercard contactless. El tramo del aeropuerto tiene tarifa aparte.",
+  "transporte": [
+    {
+      "medio": "Billete sencillo (90 min)",
+      "util_para": "Metro, bus, tranvía y trolebús de Atenas",
+      "precio": "€1.20",
+      "aproximado": false,
+      "nota": "Transbordos ilimitados durante 90 minutos."
+    },
+    {
+      "medio": "Pase de 24 horas",
+      "util_para": "Varios viajes en un día",
+      "precio": "€4.10",
+      "aproximado": false,
+      "nota": ""
+    },
+    {
+      "medio": "Pase turístico de 5 días",
+      "util_para": "Estancias de varios días",
+      "precio": "€8.20",
+      "aproximado": false,
+      "nota": "Conviene a partir de ≈ 7 viajes."
+    },
+    {
+      "medio": "Aeropuerto → centro (metro)",
+      "util_para": "Línea 3 del metro",
+      "precio": "€9 ida · €16 ida y vuelta (30 días)",
+      "aproximado": false,
+      "nota": "No uses el billete estándar en el tramo del aeropuerto: te lo rechazan."
+    },
+    {
+      "medio": "Bus exprés X95 desde el aeropuerto",
+      "util_para": "Alternativa al metro",
+      "precio": "€5.50",
+      "aproximado": false,
+      "nota": ""
+    },
+    {
+      "medio": "Taxi al aeropuerto (tarifa fija)",
+      "util_para": "Con equipaje",
+      "precio": "≈ €40–€54",
+      "aproximado": true,
+      "nota": ""
+    },
+    {
+      "medio": "Ferries a las islas",
+      "util_para": "Atenas (Pireo) → Santorini, Mykonos, etc.",
+      "precio": "€35–€100",
+      "aproximado": true,
+      "nota": "Barcos rápidos cuestan más; reserva con anticipación en verano."
+    }
+  ],
+  "tarjetas_y_pases": [
+    {
+      "nombre": "Pase turístico de 3 días con aeropuerto",
+      "para": "turista",
+      "precio": "€20",
+      "vigencia": "3 días",
+      "requisitos": "Incluye un viaje de ida y uno de vuelta al aeropuerto",
+      "donde_comprar": "Máquinas de metro y puntos oficiales",
+      "url": "https://publictransportguide.com/?p=4296"
+    },
+    {
+      "nombre": "ATH.ENA Card personalizada",
+      "para": "residente",
+      "precio": "Descuentos para jóvenes, estudiantes y mayores de 65",
+      "vigencia": "Según el tipo",
+      "requisitos": "Requiere tarjeta personalizada y documentos",
+      "donde_comprar": "Oficinas OASA",
+      "url": ""
+    }
+  ],
+  "pago": {
+    "tarjeta_en_transporte": "Visa y Mastercard contactless se aceptan en metro, tranvía, trolebús y bus: €1.20 por viaje con tope de €4.10 al día. Usa siempre la misma tarjeta o dispositivo. Amex y Maestro no se aceptan.",
+    "tarjeta_en_comercios": "Se aceptan tarjetas en la mayoría de comercios; en islas, pueblos y tabernas pequeñas puede que no.",
+    "efectivo": "Útil en taxis, tabernas pequeñas, kioscos, islas y propinas.",
+    "contactless_y_wallet": "Apple Pay y Google Pay funcionan en la mayoría de lugares con terminal contactless."
+  },
+  "precios_tipicos": [
+    {
+      "concepto": "Café frappé",
+      "precio": "€3–€4.50",
+      "aproximado": true
+    },
+    {
+      "concepto": "Gyros",
+      "precio": "€3–€4.50",
+      "aproximado": true
+    },
+    {
+      "concepto": "Moussaka u otro plato en taberna",
+      "precio": "€10–€14",
+      "aproximado": true
+    },
+    {
+      "concepto": "Cena en taberna",
+      "precio": "€20–€35",
+      "aproximado": true
+    },
+    {
+      "concepto": "Entrada a la Acrópolis",
+      "precio": "≈ €30 (aprox.; confirma en el sitio oficial)",
+      "aproximado": true
+    },
+    {
+      "concepto": "Hotel medio por noche",
+      "precio": "€80–€150",
+      "aproximado": true
+    }
+  ],
+  "consejos": [
+    "No uses un billete de metro común para el aeropuerto: es otra tarifa.",
+    "Reserva ferries con tiempo si viajas en julio o agosto.",
+    "Cuidado con las huelgas de transporte."
+  ],
+  "fuentes": [
+    {
+      "titulo": "Public Transport Guide: transporte de Atenas 2026",
+      "url": "https://publictransportguide.com/?p=4296"
+    },
+    {
+      "titulo": "This is Athens: transporte público",
+      "url": "https://www.thisisathens.org/acvb/getting-around/public-transportation-metro-bus-tram"
+    }
+  ],
+  "pais_iso": "GR",
+  "fecha_consulta": "2026-10-12",
+  "_estatica": true,
+  "_calidad": "Ficha base investigada en guías y sitios de 2026; los precios marcados «aprox.» son estimaciones. Confirma en el sitio oficial antes de comprar."
+}

@@ -1,0 +1,147 @@
+{
+  "moneda": {
+    "codigo_local": "EUR",
+    "mostrada_en": "EUR",
+    "nota": ""
+  },
+  "resumen": "Lisboa y Oporto son baratas y compactas. Se usa la tarjeta recargable Viva Viagem (Lisboa) o Andante (Oporto). Los trenes a Sintra y Cascais salen de estaciones céntricas.",
+  "transporte": [
+    {
+      "medio": "Metro y bus de Lisboa",
+      "util_para": "Moverse por Lisboa",
+      "precio": "€1.80 por viaje + tarjeta €0.50",
+      "aproximado": false,
+      "nota": "Un viaje de prueba cuesta €2.30 con la tarjeta."
+    },
+    {
+      "medio": "Pase de 24 horas (Carris/Metro)",
+      "util_para": "Muchos viajes en un día",
+      "precio": "≈ €7–€7.50",
+      "aproximado": true,
+      "nota": "Según una guía; confirma en Carris/Metro."
+    },
+    {
+      "medio": "Tren Lisboa–Sintra / Cascais (CP)",
+      "util_para": "Excursiones desde Lisboa",
+      "precio": "≈ €2.30–€2.50 por trayecto",
+      "aproximado": true,
+      "nota": ""
+    },
+    {
+      "medio": "Tren Lisboa–Oporto (Alfa Pendular / Intercidades)",
+      "util_para": "Entre ciudades",
+      "precio": "€25–€45",
+      "aproximado": true,
+      "nota": "Más barato con anticipación."
+    },
+    {
+      "medio": "Tranvía 28 y elevadores",
+      "util_para": "Experiencia turística",
+      "precio": "≈ €3.10",
+      "aproximado": true,
+      "nota": "Con tarjeta recargable puede costar menos."
+    },
+    {
+      "medio": "Taxi / Bolt desde el aeropuerto",
+      "util_para": "Con equipaje",
+      "precio": "€10–€20",
+      "aproximado": true,
+      "nota": "La línea roja del metro llega al aeropuerto (€1.80 + tarjeta)."
+    }
+  ],
+  "tarjetas_y_pases": [
+    {
+      "nombre": "Viva Viagem (Lisboa)",
+      "para": "todos",
+      "precio": "Tarjeta €0.50",
+      "vigencia": "Recargable ≈ 1 año",
+      "requisitos": "Una por persona",
+      "donde_comprar": "Máquinas amarillas en estaciones de metro",
+      "url": "https://www.trvlogue.com/en/lisbon-viva-viagem-guide"
+    },
+    {
+      "nombre": "Zapping",
+      "para": "todos",
+      "precio": "Saldo prepago (carga mínima ≈ €3)",
+      "vigencia": "Sin vencimiento corto",
+      "requisitos": "Se carga en la Viva Viagem",
+      "donde_comprar": "Máquinas y puntos de venta",
+      "url": ""
+    },
+    {
+      "nombre": "Lisboa Card",
+      "para": "turista",
+      "precio": "24 h ≈ €27 · 48 h ≈ €45 · 72 h ≈ €55 (aprox.)",
+      "vigencia": "24–72 horas",
+      "requisitos": "Transporte + entradas a atracciones",
+      "donde_comprar": "Oficinas de turismo",
+      "url": ""
+    },
+    {
+      "nombre": "Navegante (abono mensual)",
+      "para": "residente",
+      "precio": "≈ €30 (municipal) · ≈ €40 (metropolitano)",
+      "vigencia": "Mensual",
+      "requisitos": "Registro de datos y foto; algunos descuentos por edad",
+      "donde_comprar": "Oficinas Navegante",
+      "url": ""
+    }
+  ],
+  "pago": {
+    "tarjeta_en_transporte": "Las máquinas aceptan tarjeta; en algunos validadores ya se puede pagar con contactless, pero confírmalo antes de depender de eso.",
+    "tarjeta_en_comercios": "Se aceptan Visa/Mastercard casi en todas partes; en comercios muy pequeños pueden pedir efectivo o un mínimo.",
+    "efectivo": "Útil en pastelerías, tascas, mercados y propinas.",
+    "contactless_y_wallet": "Apple Pay y Google Pay funcionan en la mayoría de comercios."
+  },
+  "precios_tipicos": [
+    {
+      "concepto": "Café (bica)",
+      "precio": "€0.80–€1.20",
+      "aproximado": true
+    },
+    {
+      "concepto": "Pastel de nata",
+      "precio": "€1.20–€1.50",
+      "aproximado": true
+    },
+    {
+      "concepto": "Plato del día",
+      "precio": "€9–€14",
+      "aproximado": true
+    },
+    {
+      "concepto": "Cerveza (imperial)",
+      "precio": "€1.50–€3",
+      "aproximado": true
+    },
+    {
+      "concepto": "Cena en restaurante medio",
+      "precio": "€20–€35",
+      "aproximado": true
+    },
+    {
+      "concepto": "Hotel medio por noche",
+      "precio": "€90–€150",
+      "aproximado": true
+    }
+  ],
+  "consejos": [
+    "Las cuestas de Lisboa son duras: lleva calzado cómodo.",
+    "Cuidado con carteristas en el tranvía 28.",
+    "En Oporto la tarjeta es Andante, no la Viva Viagem."
+  ],
+  "fuentes": [
+    {
+      "titulo": "Trvlogue: Viva Viagem en Lisboa (2026)",
+      "url": "https://www.trvlogue.com/en/lisbon-viva-viagem-guide"
+    },
+    {
+      "titulo": "CP Comboios de Portugal: billetes LX",
+      "url": "https://cp.pt/passageiros/en/train-times/Prices/bilhetes-lx"
+    }
+  ],
+  "pais_iso": "PT",
+  "fecha_consulta": "2026-10-12",
+  "_estatica": true,
+  "_calidad": "Ficha base investigada en guías y sitios de 2026; los precios marcados «aprox.» son estimaciones. Confirma en el sitio oficial antes de comprar."
+}

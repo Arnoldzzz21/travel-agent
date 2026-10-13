@@ -1,0 +1,148 @@
+{
+  "moneda": {
+    "codigo_local": "EUR",
+    "mostrada_en": "EUR",
+    "nota": ""
+  },
+  "resumen": "Roma acepta tarjeta contactless en metro y buses. Para ir entre ciudades hay trenes de alta velocidad rápidos y trenes regionales muy baratos. Cuidado con las multas si no validas el billete de papel.",
+  "transporte": [
+    {
+      "medio": "Metro, bus y tranvía de Roma (billete BIT)",
+      "util_para": "Moverse por Roma",
+      "precio": "€1.50 (válido 100 minutos)",
+      "aproximado": false,
+      "nota": "Una sola entrada al metro y transbordos ilimitados en bus/tranvía en esos 100 minutos."
+    },
+    {
+      "medio": "Pase de 24 / 48 / 72 horas",
+      "util_para": "Varios días en Roma",
+      "precio": "€8.50 / €15 / €22",
+      "aproximado": true,
+      "nota": "Datos de guía de terceros; confirma en ATAC."
+    },
+    {
+      "medio": "Leonardo Express (Fiumicino → Termini)",
+      "util_para": "Aeropuerto → centro",
+      "precio": "€14 (≈ 32 minutos)",
+      "aproximado": false,
+      "nota": "Los billetes de ciudad no valen en trenes del aeropuerto."
+    },
+    {
+      "medio": "Tren FL1 (Fiumicino → Trastevere/Tiburtina)",
+      "util_para": "Aeropuerto con presupuesto",
+      "precio": "€8 (45–60 minutos)",
+      "aproximado": false,
+      "nota": ""
+    },
+    {
+      "medio": "Frecciarossa / Italo (alta velocidad)",
+      "util_para": "Roma–Florencia, Milán, Nápoles, Venecia",
+      "precio": "€20–€110",
+      "aproximado": true,
+      "nota": "Mucho más barato con anticipación."
+    },
+    {
+      "medio": "Trenes regionales",
+      "util_para": "Tramos cortos y baratos (ej. Roma–Nápoles)",
+      "precio": "€9–€25",
+      "aproximado": true,
+      "nota": "Se valida el billete de papel antes de subir."
+    },
+    {
+      "medio": "Vaporetto de Venecia",
+      "util_para": "Moverse por Venecia",
+      "precio": "€9.50 (75 min) · €25 (24 h)",
+      "aproximado": true,
+      "nota": ""
+    },
+    {
+      "medio": "Taxi desde Fiumicino (tarifa fija)",
+      "util_para": "Con equipaje",
+      "precio": "€55",
+      "aproximado": false,
+      "nota": "Tarifa fija al centro."
+    }
+  ],
+  "tarjetas_y_pases": [
+    {
+      "nombre": "Roma Pass (transporte + museos)",
+      "para": "turista",
+      "precio": "48 h €38 (1 entrada gratis) · 72 h €62.90 (2 entradas gratis)",
+      "vigencia": "48 o 72 horas",
+      "requisitos": "No incluye el Vaticano. El Coliseo requiere reserva.",
+      "donde_comprar": "Oficinas de turismo y en línea",
+      "url": "https://publictransportguide.com/rome-metro-ticket-prices-2026/"
+    },
+    {
+      "nombre": "Pase semanal CIS",
+      "para": "todos",
+      "precio": "€29",
+      "vigencia": "7 días",
+      "requisitos": "Ninguno",
+      "donde_comprar": "Estancos y máquinas ATAC",
+      "url": ""
+    },
+    {
+      "nombre": "Abono anual / mensual ATAC",
+      "para": "residente",
+      "precio": "≈ €250 al año (aprox.)",
+      "vigencia": "12 meses",
+      "requisitos": "Requiere tarjeta nominativa y documentos",
+      "donde_comprar": "Oficinas ATAC",
+      "url": ""
+    }
+  ],
+  "pago": {
+    "tarjeta_en_transporte": "En Roma puedes tocar Visa, Mastercard, Apple Pay o Google Pay en los lectores: €1.50 por viaje con tope diario de €8.50 (según una guía de terceros).",
+    "tarjeta_en_comercios": "Aceptada en la mayoría; algunos cafés y trattorias pequeñas prefieren efectivo.",
+    "efectivo": "Útil en bares pequeños, puestos de mercado y para propinas; muchos locales cobran «coperto» por cubierto.",
+    "contactless_y_wallet": "Apple Pay y Google Pay funcionan en la mayoría de comercios."
+  },
+  "precios_tipicos": [
+    {
+      "concepto": "Espresso en la barra",
+      "precio": "€1.20–€1.50",
+      "aproximado": true
+    },
+    {
+      "concepto": "Pizza al taglio (porción)",
+      "precio": "€2.50–€4",
+      "aproximado": true
+    },
+    {
+      "concepto": "Pizza margherita en restaurante",
+      "precio": "€8–€12",
+      "aproximado": true
+    },
+    {
+      "concepto": "Cena en restaurante medio",
+      "precio": "€25–€45",
+      "aproximado": true
+    },
+    {
+      "concepto": "Coliseo + Foro Romano",
+      "precio": "≈ €18–€25 (reserva recomendada)",
+      "aproximado": true
+    },
+    {
+      "concepto": "Hotel medio por noche",
+      "precio": "€120–€200",
+      "aproximado": true
+    }
+  ],
+  "consejos": [
+    "Valida el billete de papel antes de subir: la multa puede ser de €100 o más.",
+    "En Roma el tope diario de contactless iguala el pase de 24 horas, así que no necesitas pase.",
+    "Hay huelgas de transporte con frecuencia (suelen anunciarse con tiempo)."
+  ],
+  "fuentes": [
+    {
+      "titulo": "Public Transport Guide: precios del transporte de Roma 2026",
+      "url": "https://publictransportguide.com/rome-metro-ticket-prices-2026/"
+    }
+  ],
+  "pais_iso": "IT",
+  "fecha_consulta": "2026-10-12",
+  "_estatica": true,
+  "_calidad": "Ficha base investigada en guías y sitios de 2026; los precios marcados «aprox.» son estimaciones. Confirma en el sitio oficial antes de comprar."
+}

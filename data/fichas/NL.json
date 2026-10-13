@@ -1,0 +1,131 @@
+{
+  "moneda": {
+    "codigo_local": "EUR",
+    "mostrada_en": "EUR",
+    "nota": ""
+  },
+  "resumen": "Ámsterdam se recorre bien en tranvía, metro y bicicleta. Las ciudades del país se unen por tren (NS). Las reglas del pago contactless cambiaron en los últimos años: confirma en OVpay antes de depender de ello.",
+  "transporte": [
+    {
+      "medio": "Tranvía, metro y bus de Ámsterdam (GVB)",
+      "util_para": "Moverse por la ciudad",
+      "precio": "€3.40 por viaje (1 hora con transbordos)",
+      "aproximado": true,
+      "nota": "Según una guía de terceros."
+    },
+    {
+      "medio": "Pase GVB de 24 h / 2 días / 3 días / 7 días",
+      "util_para": "Muchos viajes",
+      "precio": "€8.50 / €14.50 / €20 / €27.50",
+      "aproximado": true,
+      "nota": ""
+    },
+    {
+      "medio": "Tren NS Schiphol → Ámsterdam Centraal",
+      "util_para": "Aeropuerto → centro (15–20 min)",
+      "precio": "≈ €5.60",
+      "aproximado": true,
+      "nota": ""
+    },
+    {
+      "medio": "Trenes NS entre ciudades",
+      "util_para": "Haarlem, Leiden, La Haya",
+      "precio": "€5–€20",
+      "aproximado": true,
+      "nota": "Se paga con OV-chipkaart o billete NS."
+    },
+    {
+      "medio": "Alquiler de bicicleta",
+      "util_para": "Recorrer la ciudad",
+      "precio": "€10–€15 por día",
+      "aproximado": true,
+      "nota": ""
+    }
+  ],
+  "tarjetas_y_pases": [
+    {
+      "nombre": "OV-chipkaart anónima",
+      "para": "todos",
+      "precio": "≈ €7.50 la tarjeta + carga mínima €10",
+      "vigencia": "Recargable",
+      "requisitos": "Ninguno; se usa para tren, tranvía, metro y bus",
+      "donde_comprar": "Máquinas NS y puntos de venta",
+      "url": "https://publictransportguide.com/ov-chipkaart-price-amsterdam-2026/"
+    },
+    {
+      "nombre": "Pase GVB multi-día",
+      "para": "turista",
+      "precio": "2 días €14.50 · 3 días €20 · 7 días €27.50",
+      "vigencia": "Días consecutivos",
+      "requisitos": "Solo dentro del área GVB",
+      "donde_comprar": "GVB Tickets & Info y máquinas",
+      "url": ""
+    },
+    {
+      "nombre": "Abonos y suscripciones mensuales NS/GVB",
+      "para": "residente",
+      "precio": "Depende del recorrido",
+      "vigencia": "Mensual o anual",
+      "requisitos": "Tarjeta personal y datos",
+      "donde_comprar": "NS / GVB",
+      "url": ""
+    }
+  ],
+  "pago": {
+    "tarjeta_en_transporte": "El tranvía, metro y bus de Ámsterdam aceptan Visa/Mastercard contactless (OVpay). Para trenes NS, las fuentes se contradicen: confirma en OVpay o usa una OV-chipkaart. Si olvidas hacer «check out» pagas el máximo.",
+    "tarjeta_en_comercios": "Muchos comercios y cafés pequeños prefieren tarjeta de débito local (Maestro/V Pay) y algunos no aceptan tarjetas de crédito: lleva otra opción o efectivo.",
+    "efectivo": "Cada vez menos común, pero útil en algunos mercados y sitios pequeños.",
+    "contactless_y_wallet": "Apple Pay y Google Pay funcionan en la mayoría de comercios."
+  },
+  "precios_tipicos": [
+    {
+      "concepto": "Stroopwafel",
+      "precio": "€1.50–€3",
+      "aproximado": true
+    },
+    {
+      "concepto": "Café",
+      "precio": "€3–€4",
+      "aproximado": true
+    },
+    {
+      "concepto": "Cerveza",
+      "precio": "€4.50–€6",
+      "aproximado": true
+    },
+    {
+      "concepto": "Cena en restaurante medio",
+      "precio": "€25–€45",
+      "aproximado": true
+    },
+    {
+      "concepto": "Rijksmuseum / Casa de Ana Frank",
+      "precio": "≈ €25 / ≈ €16 (aprox.)",
+      "aproximado": true
+    },
+    {
+      "concepto": "Hotel medio por noche",
+      "precio": "€150–€220",
+      "aproximado": true
+    }
+  ],
+  "consejos": [
+    "Hace check-in y check-out siempre; si no, te cobran el máximo.",
+    "Cuidado con las bicicletas: no camines por el carril bici.",
+    "Reserva la Casa de Ana Frank y el Rijksmuseum con tiempo."
+  ],
+  "fuentes": [
+    {
+      "titulo": "Public Transport Guide: OV-chipkaart 2026",
+      "url": "https://publictransportguide.com/ov-chipkaart-price-amsterdam-2026/"
+    },
+    {
+      "titulo": "Amsterdam Tourism: guía OV-chipkaart",
+      "url": "https://www.amsterdamtourism.org/getting-around-amsterdam/ov-chipkaart-guide/"
+    }
+  ],
+  "pais_iso": "NL",
+  "fecha_consulta": "2026-10-12",
+  "_estatica": true,
+  "_calidad": "Ficha base investigada en guías y sitios de 2026; los precios marcados «aprox.» son estimaciones. Confirma en el sitio oficial antes de comprar. Las fuentes se contradicen en el contactless en trenes NS."
+}

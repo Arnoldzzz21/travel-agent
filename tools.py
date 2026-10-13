@@ -3,13 +3,15 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import threading
+import unicodedata
 import time
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 import requests
 
@@ -242,6 +244,72 @@ def tool_guardar_nota(ctx: ToolContext, texto: str) -> dict:
     return {"ok": True}
 
 
+def _split_sections(text: str) -> list[tuple[str, str]]:
+    """Divide un extracto de MediaWiki (explaintext) en (titulo, contenido)."""
+    parts, title, buf = [], "Introducción", []
+    for line in text.splitlines():
+        m = re.match(r"^=+\s*(.+?)\s*=+\s*$", line)
+        if m:
+            parts.append((title, "\n".join(buf).strip()))
+            title, buf = m.group(1), []
+        else:
+            buf.append(line)
+    parts.append((title, "\n".join(buf).strip()))
+    return [(t, c) for t, c in parts if c]
+
+
+def tool_wikivoyage(ctx: ToolContext, lugar: str, seccion: str = "", idioma: str = "es") -> dict:
+    """Guía de viaje libre (Wikivoyage, CC BY-SA). Sin seccion devuelve la introducción y la lista de secciones."""
+    langs = list(dict.fromkeys([idioma if idioma in ("es", "en") else "es", "en"]))
+    for lang in langs:
+        try:
+            d = _get_json(
+                f"https://{lang}.wikivoyage.org/w/api.php",
+                {"action": "query", "prop": "extracts", "explaintext": 1, "redirects": 1, "titles": lugar, "format": "json", "formatversion": 2},
+            )
+            page = (d.get("query", {}).get("pages") or [{}])[0]
+        except Exception:
+            continue
+        if page.get("missing") or not page.get("extract"):
+            continue
+        secs = _split_sections(page["extract"])
+        url = f"https://{lang}.wikivoyage.org/wiki/" + quote(str(page.get("title", lugar)).replace(" ", "_"))
+        out = {"lugar": page.get("title", lugar), "idioma": lang, "fuente": "Wikivoyage (CC BY-SA)", "url": url}
+        if seccion.strip():
+            q = seccion.strip().lower()
+            hits = [(t, c) for t, c in secs if q in t.lower()]
+            if not hits:
+                out["secciones_disponibles"] = [t for t, _ in secs]
+                out["nota"] = f"No hay una sección que contenga '{seccion}'."
+                return out
+            out["contenido"] = "\n\n".join(f"## {t}\n{c}" for t, c in hits)[:6000]
+        else:
+            out["introduccion"] = secs[0][1][:1800] if secs else ""
+            out["secciones_disponibles"] = [t for t, _ in secs]
+        return out
+    return {"error": f"No encontré '{lugar}' en Wikivoyage. Prueba con el nombre en inglés o usa buscar_web."}
+
+
+def _norm(s: str) -> str:
+    return "".join(ch for ch in unicodedata.normalize("NFKD", s.lower()) if not unicodedata.combining(ch)).strip()
+
+
+def tool_ficha_pais(ctx: ToolContext, pais: str) -> dict:
+    """Ficha guardada del país (transporte, pases, pagos, precios típicos). Es el dato más fiable y rápido: úsala antes de buscar en la web."""
+    from countries import load_countries
+
+    q = _norm(pais)
+    c = next((x for x in load_countries() if q in (_norm(x.es), _norm(x.en), x.iso.lower())), None)
+    if c is None or ctx.store is None:
+        return {"error": f"País '{pais}' no encontrado en el catálogo."}
+    f = ctx.store.load_ficha(c.iso)
+    if not f or f.get("_sin_formato"):
+        return {"disponible": False, "nota": f"Aún no hay ficha de {c.es}. Usa buscar_web o wikivoyage."}
+    f = {k: v for k, v in f.items() if not k.startswith("_") or k in ("_estatica",)}
+    f["disponible"] = True
+    return f
+
+
 _FUNCS = {
     "clima": tool_clima,
     "tipo_de_cambio": tool_tipo_de_cambio,
@@ -249,10 +317,22 @@ _FUNCS = {
     "guardar_lugar": tool_guardar_lugar,
     "agregar_parada": tool_agregar_parada,
     "guardar_nota": tool_guardar_nota,
+    "wikivoyage": tool_wikivoyage,
+    "ficha_pais": tool_ficha_pais,
 }
 
 _STR = {"type": "string"}
 TOOLS: list[dict] = [
+    {
+        "name": "ficha_pais",
+        "description": "Ficha ya investigada de un país: transporte con precios, tarjetas/pases para turistas y residentes, formas de pago y precios típicos. Es el dato más rápido y fiable: consúltala ANTES de buscar en la web cuando pregunten por transporte, pases o pagos.",
+        "input_schema": {"type": "object", "properties": {"pais": {**_STR, "description": "Nombre del país, ej. 'Japón'"}}, "required": ["pais"]},
+    },
+    {
+        "name": "wikivoyage",
+        "description": "Guía de viaje libre de Wikivoyage sobre una ciudad o región (cómo llegar, moverse, comer, dormir, qué ver). Sin 'seccion' devuelve la introducción y la lista de secciones; con 'seccion' (ej. 'Moverse', 'Get around', 'Comer') devuelve ese texto.",
+        "input_schema": {"type": "object", "properties": {"lugar": {**_STR, "description": "Ciudad o región, ej. 'Kioto'"}, "seccion": _STR, "idioma": {"type": "string", "enum": ["es", "en"]}}, "required": ["lugar"]},
+    },
     {
         "name": "clima",
         "description": "Pronóstico del tiempo (hasta 16 días) para una ciudad. Úsalo solo si el viaje es en las próximas 2 semanas.",

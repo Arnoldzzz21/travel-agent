@@ -1,0 +1,198 @@
+{
+  "moneda": {
+    "codigo_local": "JPY",
+    "mostrada_en": "USD",
+    "nota": "Monto en yenes entre paréntesis. Tasa: 1 JPY = 0.00631 USD (Frankfurter/BCE, 2026-10-12)."
+  },
+  "resumen": "Trenes y metro puntuales y muy completos. Lo más cómodo es una tarjeta IC (Suica/PASMO) en el iPhone o una física, y llevar efectivo en yenes para templos, restaurantes pequeños y algunos buses. Hay pases de metro para turistas; el Japan Rail Pass solo suele convenir con itinerarios muy largos.",
+  "transporte": [
+    {
+      "medio": "Metro de Tokio (Tokyo Metro + Toei)",
+      "util_para": "Moverse dentro de Tokio",
+      "precio": "USD 1.14–2.08 (¥180–¥330)",
+      "aproximado": true,
+      "nota": "Tarifa sencilla según distancia; con tarjeta IC es algo más barata que con boleto de papel."
+    },
+    {
+      "medio": "Trenes JR locales (línea Yamanote y otras)",
+      "util_para": "Circuito principal de Tokio y trenes suburbanos",
+      "precio": "USD 1.01 (¥160)",
+      "aproximado": false,
+      "nota": "Tarifa mínima en boleto de papel desde marzo 2026 (JR East subió ~7,1 % de promedio; antes ¥150). Con IC es unos ¥8–9 menos."
+    },
+    {
+      "medio": "Shinkansen Tokio–Kioto",
+      "util_para": "Ciudades grandes (2 h 15 min a 2 h 40 min)",
+      "precio": "USD 88.34–94.65 (¥14,000–¥15,000)",
+      "aproximado": true,
+      "nota": "Asiento reservado en Nozomi; la reserva suma ¥330–¥930 según la fecha. Hay trenes más baratos (Hikari, Kodama) y asiento no reservado."
+    },
+    {
+      "medio": "Tren expreso desde el aeropuerto de Narita (N'EX / Skyliner)",
+      "util_para": "Narita → centro de Tokio",
+      "precio": "USD 15.77–20.82 (¥2,500–¥3,300)",
+      "aproximado": true,
+      "nota": "Skyliner y Narita Express; también hay trenes locales más baratos pero más lentos."
+    },
+    {
+      "medio": "Bus económico desde Narita",
+      "util_para": "Narita → Tokio con presupuesto bajo",
+      "precio": "USD 6.31–9.46 (¥1,000–¥1,500)",
+      "aproximado": true,
+      "nota": "Buses low-cost; tardan más y dependen del tráfico."
+    },
+    {
+      "medio": "Haneda → centro de Tokio (monorriel / Keikyu)",
+      "util_para": "Aeropuerto más cercano a la ciudad",
+      "precio": "USD 3.15–4.42 (¥500–¥700)",
+      "aproximado": true,
+      "nota": ""
+    },
+    {
+      "medio": "Bus urbano",
+      "util_para": "Zonas sin metro y ciudades como Kioto",
+      "precio": "USD 1.33–1.64 (¥210–¥260)",
+      "aproximado": true,
+      "nota": "Tarifa casi siempre fija; se paga con tarjeta IC o con monedas exactas."
+    },
+    {
+      "medio": "Taxi",
+      "util_para": "Trayectos cortos, de noche o con equipaje",
+      "precio": "USD 3.15–7.57 (¥500–¥1,200)",
+      "aproximado": true,
+      "nota": "Bajada de bandera ~¥500; es caro para trayectos largos. Casi no se da propina."
+    }
+  ],
+  "tarjetas_y_pases": [
+    {
+      "nombre": "Suica / PASMO / ICOCA (tarjeta IC física)",
+      "para": "todos",
+      "precio": "Depósito USD 3.15 (¥500) reembolsable + carga inicial típica USD 9.46 (¥1,500) (≈ USD 12.62 (¥2,000) para empezar)",
+      "vigencia": "10 años sin uso; recarga máxima ¥20,000",
+      "requisitos": "Ninguno. A veces la emisión de físicas está limitada.",
+      "donde_comprar": "Máquinas de estaciones JR y de metro",
+      "url": "https://www.japan-guide.com/e/e2359_003.html"
+    },
+    {
+      "nombre": "Welcome Suica / PASMO Passport (para turistas)",
+      "para": "turista",
+      "precio": "Sin depósito de ¥500 (el precio de emisión varía)",
+      "vigencia": "Tarjeta física: 28 días; versión app en iPhone: 180 días",
+      "requisitos": "Sin reembolso. Venta en lugares limitados; PASMO turístico se vende en Narita y Haneda.",
+      "donde_comprar": "Aeropuertos y puntos de venta autorizados",
+      "url": "https://www.japan-guide.com/e/e2359_003.html"
+    },
+    {
+      "nombre": "Suica / PASMO / ICOCA en el celular",
+      "para": "todos",
+      "precio": "Sin costo de tarjeta; se carga saldo",
+      "vigencia": "Según la billetera",
+      "requisitos": "iPhone 8 o posterior: Apple Wallet. En Android es difícil para visitantes (requiere Osaifu-Keitai, app en japonés y a veces tarjeta de Japón).",
+      "donde_comprar": "Apple Wallet / app Welcome Suica",
+      "url": "https://www.japan-guide.com/e/e2359_003.html"
+    },
+    {
+      "nombre": "Tokyo Subway Ticket (Tokyo Metro + Toei)",
+      "para": "turista",
+      "precio": "24 h USD 6.31 (¥1,000) · 48 h USD 9.46 (¥1,500) · 72 h USD 12.62 (¥2,000)",
+      "vigencia": "24, 48 o 72 horas desde el primer uso",
+      "requisitos": "Para visitantes extranjeros",
+      "donde_comprar": "Tienda en línea oficial y puntos de venta para turistas",
+      "url": "https://www.tokyometro.jp/en/ticket/travel/index.html"
+    },
+    {
+      "nombre": "Japan Rail Pass (nacional)",
+      "para": "turista",
+      "precio": "7 días USD 316 (¥50,000) · 14 días USD 505 (¥80,000) · 21 días USD 631 (¥100,000)",
+      "vigencia": "7, 14 o 21 días consecutivos",
+      "requisitos": "Solo visitantes temporales. No cubre los trenes Nozomi y Mizuho (se paga suplemento).",
+      "donde_comprar": "En línea y en oficinas JR",
+      "url": "https://www.japan-guide.com/e/e2357.html"
+    },
+    {
+      "nombre": "Abonos de commuter (teiki) y tarjetas de descuento",
+      "para": "residente",
+      "precio": "Depende del recorrido",
+      "vigencia": "1, 3 o 6 meses",
+      "requisitos": "Hay que ser residente, trabajar o estudiar en la zona; algunos requieren domicilio en Japón.",
+      "donde_comprar": "Taquillas de las compañías de tren",
+      "url": ""
+    }
+  ],
+  "pago": {
+    "tarjeta_en_transporte": "Las tarjetas IC funcionan en trenes, metros y casi todos los buses de las grandes ciudades. Algunas líneas aceptan ya tarjetas Visa/Mastercard contactless directamente; la cobertura crece, así que confírmalo por línea.",
+    "tarjeta_en_comercios": "Visa y Mastercard se aceptan en hoteles, grandes almacenes, cadenas, konbini y mucho comercio turístico; Amex y otras, menos.",
+    "efectivo": "Hace falta efectivo en restaurantes y bares pequeños, máquinas de boletos de ramen, templos y santuarios, algunos buses y zonas rurales.",
+    "contactless_y_wallet": "Apple Pay funciona y permite cargar Suica. Los cajeros de 7-Eleven y de Correos de Japón suelen aceptar tarjetas extranjeras para retirar yenes."
+  },
+  "precios_tipicos": [
+    {
+      "concepto": "Ramen o menú del día",
+      "precio": "USD 6.31–9.46 (¥1,000–¥1,500)",
+      "aproximado": true
+    },
+    {
+      "concepto": "Comida en restaurante medio",
+      "precio": "USD 15.77–25.24 (¥2,500–¥4,000)",
+      "aproximado": true
+    },
+    {
+      "concepto": "Onigiri o sándwich en konbini",
+      "precio": "USD 0.95–1.89 (¥150–¥300)",
+      "aproximado": true
+    },
+    {
+      "concepto": "Café",
+      "precio": "USD 2.52–3.79 (¥400–¥600)",
+      "aproximado": true
+    },
+    {
+      "concepto": "Cerveza en un izakaya",
+      "precio": "USD 3.15–5.05 (¥500–¥800)",
+      "aproximado": true
+    },
+    {
+      "concepto": "Entrada a templo o atracción",
+      "precio": "USD 3.15–9.46 (¥500–¥1,500)",
+      "aproximado": true
+    },
+    {
+      "concepto": "Hotel de negocios por noche",
+      "precio": "USD 56.79–94.65 (¥9,000–¥15,000)",
+      "aproximado": true
+    }
+  ],
+  "consejos": [
+    "Si tienes iPhone, agrega Suica a Apple Wallet para no hacer filas en las máquinas.",
+    "Compara el Japan Rail Pass con boletos sueltos: con los precios actuales rara vez conviene salvo recorridos largos entre varias ciudades.",
+    "Lleva yenes en efectivo y retira en cajeros de 7-Eleven.",
+    "JR East subió sus tarifas ~7,1 % en marzo 2026: revisa precios actualizados antes de comprar.",
+    "Los billetes de shinkansen se compran con tiempo en temporadas altas (Año Nuevo, Golden Week, Obon)."
+  ],
+  "fuentes": [
+    {
+      "titulo": "Japan Guide: Japan Rail Pass",
+      "url": "https://www.japan-guide.com/e/e2357.html"
+    },
+    {
+      "titulo": "Japan Guide: Tarjetas IC",
+      "url": "https://www.japan-guide.com/e/e2359_003.html"
+    },
+    {
+      "titulo": "Tokyo Metro: Tokyo Subway Ticket",
+      "url": "https://www.tokyometro.jp/en/ticket/travel/index.html"
+    },
+    {
+      "titulo": "Time Out Tokyo: JR East sube tarifas en marzo 2026",
+      "url": "https://www.timeout.com/tokyo/news/jr-east-is-raising-its-prices-starting-in-march-2026-080425"
+    },
+    {
+      "titulo": "Frankfurter: tipo de cambio JPY→USD",
+      "url": "https://api.frankfurter.dev/v1/latest?base=JPY&symbols=USD"
+    }
+  ],
+  "pais_iso": "JP",
+  "fecha_consulta": "2026-10-12",
+  "_estatica": true,
+  "_calidad": "Ficha base investigada en guías y sitios de 2026; los precios marcados «aprox.» son estimaciones. Confirma en el sitio oficial antes de comprar."
+}
