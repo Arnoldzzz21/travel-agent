@@ -2,6 +2,8 @@
 
 Chat with an agent (Claude) + route + map, with one folder per trip.
 
+**Live app:** https://traveling.streamlit.app/
+
 ## How to run it
 ```bash
 pip install -r requirements.txt

@@ -19,7 +19,7 @@ import ui
 from countries import SUBREGIONS, load_countries
 from storage import ROUTE_COLS, TripStore, normalize_route
 
-st.set_page_config(page_title="Mi agente de viajes", page_icon="🧭", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Nómada · Arnoldo Cuéllar", page_icon="🧭", layout="centered", initial_sidebar_state="collapsed")
 ui.inject_css()
 
 ROOT = Path(os.environ.get("VIAJES_DIR", Path(__file__).parent / "viajes"))
@@ -103,6 +103,8 @@ def sidebar(slug: str | None) -> None:
         chat = st.session_state.get("chat")
         if chat:
             st.caption(f"Uso en esta conversación: {chat['in']:,} tokens de entrada · {chat['out']:,} de salida · {chat['searches']} búsquedas web")
+        st.divider()
+        ui.brand_footer(sidebar=True)
     if changed:
         st.rerun()
 
@@ -120,6 +122,7 @@ def welcome() -> None:
     ui.cover("JP", "Tu próximo viaje, a tu manera", "Crea una carpeta por viaje o ciudad (Madrid, Japón, Europa 2027…). Ahí se guardan tu ruta, tus lugares y tus notas, y tu agente te ayuda a planearlo.")
     st.text_input("Nombre del viaje", key="new_trip_name", placeholder="Ej. Madrid")
     st.button("¡Vamos!  →", type="primary", on_click=create_trip)
+    ui.brand_footer()
 
 
 # ============================================================ Descubrir
@@ -552,3 +555,6 @@ elif section == SECTIONS[2]:
     page_map(slug, route, places)
 else:
     page_chat(slug, meta, route, places)
+
+if section != SECTIONS[3]:  # en el chat el campo de texto ya ocupa el borde inferior
+    ui.brand_footer()

@@ -141,6 +141,13 @@ button[kind="secondary"],[data-testid="stBaseButton-secondary"]{background:#fff!
 [data-testid="stMetric"]{background:#fff;border-radius:20px;padding:12px 16px;box-shadow:0 6px 22px rgba(63,59,125,.09);}
 .tc-section{font-family:'Merriweather',serif;font-weight:700;color:var(--ink);font-size:1.15rem;margin:18px 0 4px;}
 
+/* ---------- marca ---------- */
+.tc-brand{text-align:center;margin:28px 0 8px;font-size:.78rem;color:var(--ink-2);line-height:1.6;}
+.tc-brand b{font-family:'Merriweather',serif;color:var(--ink);font-size:.9rem;letter-spacing:.01em;}
+.tc-brand a{color:var(--violet);font-weight:700;text-decoration:none;}
+.tc-brand a:hover{text-decoration:underline;}
+.tc-brand .dot{opacity:.5;margin:0 .35em;}
+
 /* ---------- celular ---------- */
 /* botón de la barra lateral (Ajustes): siempre visible, redondo y fácil de tocar */
 [data-testid="stExpandSidebarButton"],[data-testid="stSidebarCollapsedControl"] button{
@@ -203,6 +210,25 @@ GRADIENTS = [
 
 def inject_css() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
+
+
+# Marca personal (cámbiala aquí si quieres otro nombre, enlace o lema)
+BRAND_NAME = "Arnoldo Cuéllar"
+BRAND_TAGLINE = "Data & BI Analyst"
+BRAND_URL = "https://github.com/Arnoldzzz21"
+
+
+def brand_footer(sidebar: bool = False) -> None:
+    """Firma discreta al final de la página (o en la barra lateral)."""
+    html = (
+        f'<div class="tc-brand">✈️ <b>{escape(BRAND_NAME)}</b><br>'
+        f'{escape(BRAND_TAGLINE)}<span class="dot">·</span>'
+        f'<a href="{escape(BRAND_URL)}" target="_blank" rel="noopener noreferrer">GitHub</a></div>'
+    )
+    if sidebar:
+        st.sidebar.markdown(html, unsafe_allow_html=True)
+    else:
+        st.markdown(html, unsafe_allow_html=True)
 
 
 def top_header(agent_name: str, title: str = "Descubrir") -> None:
