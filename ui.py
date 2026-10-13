@@ -140,6 +140,54 @@ button[kind="secondary"],[data-testid="stBaseButton-secondary"]{background:#fff!
 [data-testid="stDataFrame"],[data-testid="stDataEditor"]{border-radius:18px;overflow:hidden;box-shadow:0 6px 22px rgba(63,59,125,.09);}
 [data-testid="stMetric"]{background:#fff;border-radius:20px;padding:12px 16px;box-shadow:0 6px 22px rgba(63,59,125,.09);}
 .tc-section{font-family:'Merriweather',serif;font-weight:700;color:var(--ink);font-size:1.15rem;margin:18px 0 4px;}
+
+/* ---------- celular ---------- */
+/* botón de la barra lateral (Ajustes): siempre visible, redondo y fácil de tocar */
+[data-testid="stExpandSidebarButton"],[data-testid="stSidebarCollapsedControl"] button{
+  position:fixed!important;top:34px;left:14px;z-index:1001;width:44px;height:44px;border-radius:50%!important;
+  background:#fff!important;box-shadow:0 6px 18px rgba(63,59,125,.20);display:grid;place-items:center;
+  font-size:0!important;color:transparent!important;overflow:hidden;}
+[data-testid="stExpandSidebarButton"] *,[data-testid="stSidebarCollapsedControl"] button *{display:none!important;}
+[data-testid="stExpandSidebarButton"]::after,[data-testid="stSidebarCollapsedControl"] button::after{content:"⚙️";font-size:1.3rem;color:var(--ink);}
+[data-testid="stExpandSidebarButton"]:active{transform:scale(.94);}
+[data-testid="stHeader"]{pointer-events:none;}
+[data-testid="stHeader"] button,[data-testid="stHeader"] a{pointer-events:auto;}
+
+/* en pantallas táctiles no hay "hover": evita que las tarjetas se queden levantadas después de tocar */
+@media (hover:none){
+  .sc-wrap:hover,.tc-country:hover{transform:none;box-shadow:var(--shadow);}
+  [data-testid="stBaseButton-primary"]:hover,[data-testid="stBaseButton-secondary"]:hover{transform:none;box-shadow:none;}
+}
+
+@media (max-width:640px){
+  .block-container{padding-left:1rem;padding-right:1rem;padding-top:1.2rem;}
+  /* el botón ⚙️ ocupa el lugar del nombre del agente en la cabecera */
+  .tc-bar-l{visibility:hidden;}
+  /* botones con tamaño táctil (44px) */
+  .stButton button,[data-testid="stLinkButton"] a,[data-testid="stPopover"] button{min-height:2.75rem;font-size:.92rem;}
+  .st-key-section button[data-variant="segmented_control"]{min-height:2.7rem;}
+  /* selector de viaje + "Nuevo" en una sola fila */
+  [data-testid="stHorizontalBlock"]:has(.st-key-trip_slug){flex-wrap:nowrap!important;gap:.5rem!important;}
+  [data-testid="stHorizontalBlock"]:has(.st-key-trip_slug)>[data-testid="stColumn"]{min-width:0!important;}
+  /* título y texto un poco más compactos */
+  .tc-bartitle{font-size:1.35rem;}
+  .tc-sheet-title{font-size:1.4rem;}
+  /* mensajes del chat más anchos */
+  [data-testid="stChatMessage"]{padding:.75rem .85rem;}
+  /* pestañas de la ficha con desplazamiento horizontal suave */
+  [data-baseweb="tab-list"]{overflow-x:auto;scrollbar-width:none;}
+  [data-baseweb="tab-list"]::-webkit-scrollbar{display:none;}
+  [data-baseweb="tab"]{white-space:nowrap;padding-left:.7rem;padding-right:.7rem;}
+}
+@media (max-width:360px){
+  .st-key-section button[data-variant="segmented_control"]{font-size:.66rem;}
+  .tc-bartitle{font-size:1.2rem;}
+}
+/* iPhone con muesca: respeta la zona segura de abajo */
+@supports (padding:max(0px)){
+  .st-key-section{bottom:max(16px,calc(env(safe-area-inset-bottom) + 8px));}
+  [data-testid="stChatInput"]{margin-bottom:calc(78px + env(safe-area-inset-bottom));}
+}
 </style>
 """
 

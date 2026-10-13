@@ -534,7 +534,7 @@ section = section or st.session_state.get("_last_section", SECTIONS[0])
 st.session_state["_last_section"] = section
 
 ui.top_header(cfg["agent_name"], TITLES[section])
-col_a, col_b = st.columns([3, 1])
+col_a, col_b = st.columns([5, 3])
 slug = col_a.selectbox("Viaje", list(names), format_func=names.get, key="trip_slug", label_visibility="collapsed")
 with col_b.popover("＋ Nuevo", width="stretch"):
     st.text_input("Nombre del viaje", key="new_trip_name", placeholder="Ej. Tokio")
