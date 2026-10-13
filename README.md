@@ -1,19 +1,6 @@
 # My Travel Agent (Streamlit)
 
-Chat with an agent (Claude) + route + map, with one folder per trip.
-
-**Live app:** https://traveling.streamlit.app/
-
-## How to run it
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
-1. Open the side menu (⚙️ Ajustes / Settings), set your agent's **name** and paste your Anthropic API key
-   (or create it in `.streamlit/secrets.toml`, copying `secrets.toml.example`).
-2. Create your first trip folder (e.g. "Madrid"). It is saved in `viajes/madrid/`.
-
-Note: the app interface is in Spanish.
+Chat with an agent + route + map, with one folder per trip.
 
 ## Screens
 Design inspired by a travel app template: centered title header, text tabs, featured carousel, "Recomendados" (Recommended) grid,
@@ -35,8 +22,8 @@ a floating bottom navigation bar (Inicio · Ruta · Mapa · Chat) and a detail s
 - Google Maps: the app only generates links and **does not use the Google API**, so there are no charges from that side.
 
 ## Keeping the chat sharp
-- 🧹 Nueva conversación (New conversation): clears the chat (route, places and notes are kept).
-- 📝 Resumir y limpiar (Summarize and clear): saves a summary in `notas.md` and clears the chat.
+-  New conversation: clears the chat (route, places and notes are kept).
+- Summarize and clear): saves a summary in `notas.md` and clears the chat.
 - Chat memory only sends your last N messages.
 
 ## Folders
