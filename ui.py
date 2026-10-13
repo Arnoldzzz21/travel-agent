@@ -214,7 +214,6 @@ def inject_css() -> None:
 
 # Marca personal (cámbiala aquí si quieres otro nombre, enlace o lema)
 BRAND_NAME = "Arnoldo Cuéllar"
-BRAND_TAGLINE = "Data & BI Analyst"
 BRAND_URL = "https://github.com/Arnoldzzz21"
 
 
@@ -222,7 +221,6 @@ def brand_footer(sidebar: bool = False) -> None:
     """Firma discreta al final de la página (o en la barra lateral)."""
     html = (
         f'<div class="tc-brand">✈️ <b>{escape(BRAND_NAME)}</b><br>'
-        f'{escape(BRAND_TAGLINE)}<span class="dot">·</span>'
         f'<a href="{escape(BRAND_URL)}" target="_blank" rel="noopener noreferrer">GitHub</a></div>'
     )
     if sidebar:
