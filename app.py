@@ -16,6 +16,7 @@ import agent
 import ficha as ficha_mod
 import gemini as gem
 import tools as T
+import exports
 import ui
 from countries import SUBREGIONS, load_countries
 from storage import ROUTE_COLS, TripStore, normalize_route
@@ -42,10 +43,11 @@ CAT_COLORS = {"comida": "#E67E22", "turismo": "#6C5CE7", "transporte": "#2D98DA"
 
 # ============================================================ utilidades
 ENGINES = {"✨ Gemini (gratis)": "gemini", "🧠 Claude (API de pago)": "claude"}
-ENGINE_NAME = {"gemini": "Gemini", "claude": "Claude"}
+ENGINE_NAME = {"gemini": "Gemini", "claude": "Claude", "tavily": "Tavily"}
 KEY_SPEC = {  # motor -> (campo de la barra lateral, variables de entorno / secretos)
     "gemini": ("gemini_key_input", ("GEMINI_API_KEY", "GOOGLE_API_KEY")),
     "claude": ("api_key_input", ("ANTHROPIC_API_KEY",)),
+    "tavily": ("tavily_key_input", ("TAVILY_API_KEY",)),  # opcional: búsqueda web gratis (1,000 al mes)
 }
 
 
@@ -75,7 +77,8 @@ def _keep_key(field: str) -> None:
 
 def make_client(engine: str, key: str, timeout: int = 180):
     if engine == "gemini":
-        return gem.GeminiClient(key, timeout=timeout)
+        chat = st.session_state.get("chat") or {}
+        return gem.GeminiClient(key, timeout=timeout, tavily_key=get_api_key("tavily"), search_off=bool(chat.get("search_off")))
     return anthropic.Anthropic(api_key=key, max_retries=2, timeout=timeout)
 
 
@@ -96,6 +99,40 @@ def create_trip() -> None:
     if name:
         st.session_state["trip_slug"] = store.create(name)
         st.session_state["new_trip_name"] = ""
+
+
+def delete_trip(slug: str) -> None:
+    """Borra la carpeta del viaje (ruta, lugares, notas). Se pide confirmación antes en la interfaz."""
+    store.delete(slug)
+    st.session_state.pop("trip_slug", None)
+    st.session_state["del_ok"] = False
+    if (st.session_state.get("chat") or {}).get("slug") == slug:
+        st.session_state.pop("chat", None)
+    for k in ("route_ver", "places_ver"):
+        bump(k)
+
+
+def restore_trip() -> None:
+    """Crea un viaje nuevo a partir de un respaldo .zip subido por la persona."""
+    f = st.session_state.get(f"restore_file_{st.session_state.get('restore_ver', 0)}")
+    if f is None:
+        return
+    try:
+        st.session_state["trip_slug"] = store.import_zip(f.getvalue())
+        st.session_state["restore_msg"] = ("ok", "Viaje restaurado como una carpeta nueva.")
+        for k in ("route_ver", "places_ver"):
+            bump(k)
+    except ValueError as e:
+        st.session_state["restore_msg"] = ("err", str(e))
+    bump("restore_ver")
+
+
+def pick_country() -> None:
+    """Al elegir un país en el buscador se abre su ficha y el buscador queda listo para otra búsqueda."""
+    iso = st.session_state.get("country_pick")
+    if iso:
+        st.session_state["ficha_iso"] = iso
+    st.session_state["country_pick"] = None
 
 
 def stop_query(row) -> str:
@@ -121,7 +158,7 @@ def sidebar(slug: str | None) -> None:
             glabels, gids = list(gem.MODELS), list(gem.MODELS.values())
             glabel = st.selectbox("Modelo de Gemini", glabels, index=gids.index(cfg["gemini_model"]) if cfg["gemini_model"] in gids else 0)
             new["gemini_model"] = gem.MODELS[glabel]
-            searches = st.slider("Búsquedas en Google por respuesta", 0, 6, min(int(cfg["max_searches"]), 6), help="Gratis hasta unas 500 al día con Gemini 2.5. 0 las desactiva.")
+            searches = st.slider("Búsquedas web por respuesta", 0, 6, min(int(cfg["max_searches"]), 6), help="Necesitan la clave gratuita de Tavily (abajo). Sin ella, Gemini responde con las fichas base y Wikivoyage. 0 las desactiva.")
         else:
             labels, ids = list(agent.MODELS), list(agent.MODELS.values())
             label = st.selectbox("Modelo de Claude", labels, index=ids.index(cfg["model"]) if cfg["model"] in ids else 0)
@@ -141,9 +178,16 @@ def sidebar(slug: str | None) -> None:
             st.caption(f"🔑 Clave de {ENGINE_NAME[engine]} cargada desde el entorno.")
         elif engine == "gemini":
             st.text_input("Clave de Gemini (solo esta sesión)", type="password", key="_in_" + field, value=st.session_state.get(field, ""), on_change=_keep_key, args=(field,), help="Gratis en aistudio.google.com/apikey (Get API key). No la compartas con nadie.")
-            st.caption("🔒 En el plan gratis, Google puede usar lo que envíes para mejorar sus productos: no escribas datos personales sensibles.")
         else:
             st.text_input("Clave de Anthropic (solo esta sesión)", type="password", key="_in_" + field, value=st.session_state.get(field, ""), on_change=_keep_key, args=(field,), help="Se crea en console.anthropic.com y requiere saldo. La suscripción gratuita de claude.ai no incluye API.")
+        if engine == "gemini":
+            st.caption("🔒 En el plan gratis, Google puede usar lo que envíes para mejorar sus productos: no escribas datos personales sensibles.")
+            with st.expander("🔎 Búsqueda web gratis (opcional)"):
+                st.caption("Gemini 3 ya no incluye búsqueda de Google gratis. Con una clave gratuita de Tavily (tavily.com, 1,000 búsquedas al mes) el chat y las fichas pueden buscar precios actuales.")
+                if _env_key("tavily"):
+                    st.caption("🔑 Clave de Tavily cargada desde el entorno.")
+                else:
+                    st.text_input("Clave de Tavily (solo esta sesión)", type="password", key="_in_tavily_key_input", value=st.session_state.get("tavily_key_input", ""), on_change=_keep_key, args=("tavily_key_input",))
         if st.button("🧹 Vaciar caché de ubicaciones", width="stretch"):
             geo.clear()
             st.toast("Caché de ubicaciones vaciado")
@@ -178,6 +222,19 @@ def _sort_key(c) -> str:
     return unicodedata.normalize("NFKD", c.es).encode("ascii", "ignore").decode().lower()
 
 
+def _country_label(c) -> str:
+    ascii_es = unicodedata.normalize("NFKD", c.es).encode("ascii", "ignore").decode()
+    parts = [f"{c.flag_emoji} {c.es}"]
+    if c.en.lower() != c.es.lower():
+        parts.append(c.en)
+    if ascii_es.lower() != c.es.lower():
+        parts.append(ascii_es)  # para que «espana» o «japon» (sin tilde) también aparezcan
+    return " · ".join(parts)
+
+
+COUNTRY_LABEL = {c.iso: _country_label(c) for c in COUNTRIES}
+
+
 def page_discover(slug: str, meta: dict, route: pd.DataFrame, places: list[dict]) -> None:
     iso = st.session_state.get("ficha_iso")
     if iso:
@@ -185,12 +242,21 @@ def page_discover(slug: str, meta: dict, route: pd.DataFrame, places: list[dict]
         return
     selected = set(meta.get("paises", []))
 
+    if not selected and route.empty:
+        with st.container(border=True):
+            st.markdown("**Cómo usar Nómada en 4 pasos**")
+            st.markdown("1. **Inicio**: busca un país, mira su ficha (transporte, pagos, precios) y toca **＋ Agregar**.\n"
+                        "2. **Ruta**: escribe tus ciudades o pueblos en orden, con fechas y hotel.\n"
+                        "3. **Mapa**: ubica las paradas y ábrelas en **Google Maps**, **Street View** o **My Maps**.\n"
+                        "4. **Chat**: pídele a tu agente rutas, horarios y precios.")
     view = st.segmented_control("Ver", ["Todos", "Mis países", "Europa", "Asia"], default="Todos", key="view", label_visibility="collapsed") or "Todos"
     zone = "Todas"
     if view in ("Europa", "Asia"):
         zones = sorted({c.subregion for c in COUNTRIES if c.region == view}, key=lambda z: list(SUBREGIONS).index(z) if z in SUBREGIONS else 99)
         zone = st.selectbox("Zona", ["Todas"] + zones, key=f"zone_{view}")
-    q = st.text_input("Buscar país", placeholder="🔎 Buscar país…", label_visibility="collapsed", key="country_q").strip().lower()
+    st.selectbox("Buscar país", [c.iso for c in sorted(COUNTRIES, key=_sort_key)], index=None, format_func=lambda i: COUNTRY_LABEL[i],
+                 placeholder="🔎 Escribe un país (ej. Portugal) y tócalo…", label_visibility="collapsed", key="country_pick", on_change=pick_country)
+    q = ""
 
     items = [
         c for c in COUNTRIES
@@ -281,6 +347,8 @@ def render_ficha(c, f: dict) -> None:
     mon = f.get("moneda") or {}
     if f.get("_estatica"):
         st.caption("📚 Ficha base de la app, investigada en guías y sitios oficiales. Puedes actualizarla con la web.")
+    elif f.get("_sin_busqueda"):
+        st.warning("Esta ficha se armó SIN búsqueda web (con Wikivoyage y el conocimiento de Gemini): todos los precios son aproximados. Para precios actuales agrega la clave gratuita de Tavily en ⚙️ Ajustes y pulsa Actualizar.")
     elif f.get("_motor"):
         st.caption(f"🤖 Actualizada con búsqueda web usando {ENGINE_NAME.get(f['_motor'], f['_motor'])}.")
     st.caption(f"Consultado el {_s(f.get('fecha_consulta'))} · Moneda local: {_s(mon.get('codigo_local')) or c.currency} · Precios en: {_s(mon.get('mostrada_en')) or c.display_currency}"
@@ -413,10 +481,16 @@ def page_map(slug: str, route: pd.DataFrame, places: list[dict]) -> None:
             for i, x in enumerate(pending, 1):
                 geo.lookup(x["q"])
                 bar.progress(i / len(pending))
-            if geo.last_error and any(geo.cached(x["q"]) is None for x in pending):
-                st.warning(f"No pude consultar el servicio de ubicaciones: {geo.last_error}")
+            missing = [x["q"] for x in pending if geo.cached(x["q"]) is None]
+            if missing and geo.last_error:
+                st.warning(f"No pude consultar el servicio de ubicaciones ({geo.last_error}). Inténtalo de nuevo en un momento.")
             else:
+                st.session_state["geo_missing"] = missing
                 st.rerun()
+    if st.session_state.get("geo_missing"):
+        lost = [q for q in st.session_state["geo_missing"] if geo.cached(q) is None]
+        if lost:
+            st.warning("No encontré: " + "; ".join(lost) + ". Prueba el nombre más completo: pueblo + provincia o región + país (ej. «Aljaraque, Huelva» en Ciudad y «España» en País).")
 
     located = [x for x in rows if x["g"]]
     last_route = store.load_json(slug, "ultima_ruta.json", None)
@@ -479,6 +553,33 @@ def page_map(slug: str, route: pd.DataFrame, places: list[dict]) -> None:
             st.link_button(f"🧭 {last_route.get('titulo', 'Ruta del agente')}{f' · tramo {i}' if len(last_route['enlaces_google_maps']) > 1 else ''}", url, width="stretch")
     if not links and not last_route:
         st.caption("Necesitas al menos 2 paradas con ciudad.")
+    if rows or placed:
+        with st.expander("👁️ Ver cada parada: Maps y Street View", expanded=False):
+            st.caption("Street View abre el centro de la ciudad: arrastra al muñequito amarillo para «caminar» por las calles antes de viajar. «Llegar» usa el modo de arriba y muestra horarios en Google Maps.")
+            for n, x in enumerate(rows, 1):
+                links_ = [f"[📍 Mapa]({T.gmaps_place_link(x['q'])})"]
+                if x["g"]:
+                    links_.append(f"[👁️ Street View]({T.gmaps_streetview_link(x['g']['lat'], x['g']['lon'])})")
+                if n < len(rows):
+                    links_.append(f"[➡️ Llegar a {rows[n]['q'].split(',')[0]}]({T.gmaps_leg_link(x['q'], rows[n]['q'], mode)})")
+                st.markdown(f"**{n}. {x['q']}**  \n" + " · ".join(links_))
+            if placed:
+                st.markdown("**Lugares guardados**")
+                for p in placed:
+                    st.markdown(f"{p['nombre']}  \n[📍 Mapa]({T.gmaps_place_link(str(p['lat']) + ',' + str(p['lon']))}) · [👁️ Street View]({T.gmaps_streetview_link(p['lat'], p['lon'])})")
+
+    stops_kml = [{"name": f"{n}. {x['q']}", "lat": x["g"]["lat"], "lon": x["g"]["lon"],
+                  "desc": " → ".join(str(d) for d in (x["row"]["Llegada"], x["row"]["Salida"]) if d) + (f"\nHotel: {x['row']['Hotel']}" if x["row"]["Hotel"] else "")}
+                 for n, x in enumerate(located, 1)]
+    places_kml = [{"name": p["nombre"], "lat": p["lat"], "lon": p["lon"], "desc": f"{p.get('categoria', '')} {p.get('precio') or ''} {p.get('moneda') or ''}".strip()} for p in placed]
+    if last_route:
+        places_kml += [{"name": s["nombre"], "lat": s["lat"], "lon": s["lon"], "desc": "Ruta del agente"} for s in last_route.get("paradas", [])]
+    if stops_kml or places_kml:
+        ui.section_title("Llevar a Google My Maps")
+        st.download_button("⬇️ Descargar para Google My Maps (.kml)", exports.build_kml(store.meta(slug).get("name", "Viaje"), stops_kml, places_kml).encode("utf-8"),
+                           file_name=f"{slug}.kml", mime="application/vnd.google-earth.kml+xml", width="stretch")
+        st.caption("Pasos: abre mymaps.google.com → «Crear un nuevo mapa» → «Importar» → sube este archivo. Tu ruta y tus lugares quedan en tu cuenta de Google y los ves en la app de Google Maps (Guardado → Mapas).")
+
     if len(located) > 1:
         with st.expander("📏 Distancias entre paradas (línea recta)"):
             legs = []
@@ -572,6 +673,8 @@ def page_chat(slug: str, meta: dict, route: pd.DataFrame, places: list[dict]) ->
                     res = gem.run_agent(client, cfg["gemini_model"], system, hist, ctx, cfg["max_searches"], cfg["history_turns"], on_tool=on_tool)
                 else:
                     res = agent.run_agent(client, cfg["model"], system, hist, ctx, cfg["max_searches"], cfg["history_turns"], on_tool=on_tool)
+                if engine == "gemini":
+                    chat["search_off"] = bool(client.search_off and not client.tavily_key)
                 status.update(label="Listo", state="complete")
                 st.markdown(res.text)
                 chat["display"].append({"role": "assistant", "text": res.text, "tools": sorted(set(res.tools_used))})
@@ -612,9 +715,24 @@ st.session_state["_last_section"] = section
 ui.top_header(cfg["agent_name"], TITLES[section])
 col_a, col_b = st.columns([5, 3])
 slug = col_a.selectbox("Viaje", list(names), format_func=names.get, key="trip_slug", label_visibility="collapsed")
-with col_b.popover("＋ Nuevo", width="stretch"):
+with col_b.popover("⋯ Viajes", width="stretch"):
+    st.markdown("**＋ Nuevo viaje**")
     st.text_input("Nombre del viaje", key="new_trip_name", placeholder="Ej. Tokio")
     st.button("Crear carpeta", type="primary", on_click=create_trip)
+    st.divider()
+    st.markdown("**💾 Respaldo**")
+    st.caption("☁️ En la nube gratuita los viajes pueden borrarse cuando la app se reinicia. Descarga un respaldo cuando termines de planear.")
+    st.download_button("⬇️ Descargar respaldo de este viaje", store.export_zip(slug), file_name=f"nomada-{slug}.zip", mime="application/zip", width="stretch")
+    st.file_uploader("Restaurar desde un respaldo (.zip)", type=["zip"], key=f"restore_file_{st.session_state.get('restore_ver', 0)}")
+    st.button("Restaurar respaldo", on_click=restore_trip)
+    _msg = st.session_state.pop("restore_msg", None)
+    if _msg:
+        (st.success if _msg[0] == "ok" else st.error)(_msg[1])
+    st.divider()
+    st.markdown(f"**🗑️ Eliminar «{names[slug]}»**")
+    st.caption("Borra su ruta, lugares y notas. No se puede deshacer.")
+    st.checkbox("Sí, quiero borrar este viaje", key="del_ok")
+    st.button("Eliminar viaje", on_click=delete_trip, args=(slug,), disabled=not st.session_state.get("del_ok"))
 
 meta = store.meta(slug)
 route = store.load_route(slug)

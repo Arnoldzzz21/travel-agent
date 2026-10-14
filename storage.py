@@ -15,15 +15,18 @@ por otra con los mismos métodos.
 """
 from __future__ import annotations
 
+import io
 import json
 import re
 import shutil
+import zipfile
 import unicodedata
 from datetime import date, datetime
 from pathlib import Path
 
 import pandas as pd
 
+TRIP_FILES = ("trip.json", "ruta.csv", "lugares.json", "notas.md", "ultima_ruta.json")
 ROUTE_COLS = ["Ciudad", "País", "Llegada", "Salida", "Hotel", "Notas"]
 DATE_COLS = ["Llegada", "Salida"]
 
@@ -32,7 +35,7 @@ STATIC_FICHAS = Path(__file__).parent / "data" / "fichas"
 DEFAULT_CONFIG = {
     "agent_name": "Nómada",
     "engine": "gemini",
-    "gemini_model": "gemini-2.5-flash",
+    "gemini_model": "gemini-3.8-flash",
     "model": "claude-sonnet-5-5",
     "max_searches": 5,
     "ficha_searches": 8,
@@ -111,6 +114,44 @@ class TripStore:
 
     def delete(self, slug: str) -> None:
         shutil.rmtree(self._dir(slug))
+
+    # ---------- respaldo ----------
+    def export_zip(self, slug: str) -> bytes:
+        """Todo el viaje (ruta, lugares, notas) en un .zip para guardarlo fuera de la app."""
+        buf, d = io.BytesIO(), self._dir(slug)
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+            for f in TRIP_FILES:
+                if (d / f).exists():
+                    z.write(d / f, f)
+        return buf.getvalue()
+
+    def import_zip(self, data: bytes) -> str:
+        """Crea un viaje nuevo a partir de un respaldo. Solo se leen los archivos conocidos (nada de rutas ajenas)."""
+        try:
+            z = zipfile.ZipFile(io.BytesIO(data))
+        except zipfile.BadZipFile as e:
+            raise ValueError("El archivo no es un .zip válido.") from e
+        found = {Path(i.filename).name: i for i in z.infolist() if not i.is_dir() and Path(i.filename).name in TRIP_FILES}
+        if "trip.json" not in found:
+            raise ValueError("No parece un respaldo de Nómada (falta trip.json).")
+        if sum(i.file_size for i in found.values()) > 10_000_000:
+            raise ValueError("El respaldo es demasiado grande.")
+        try:
+            meta = json.loads(z.read(found["trip.json"]).decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as e:
+            raise ValueError("trip.json está dañado.") from e
+        if not isinstance(meta, dict):
+            raise ValueError("trip.json está dañado.")
+        meta["name"] = str(meta.get("name") or "Viaje restaurado")
+        meta["paises"] = [str(x) for x in meta.get("paises", [])] if isinstance(meta.get("paises"), list) else []
+        if any(n == meta["name"] for _, n in self.list_trips()):
+            meta["name"] += " (restaurado)"
+        slug = self.create(meta["name"])
+        for f, info in found.items():
+            if f != "trip.json":
+                (self._dir(slug) / f).write_bytes(z.read(info))
+        self.save_json(slug, "trip.json", meta)
+        return slug
 
     # ---------- json genérico ----------
     def load_json(self, slug: str, fname: str, default):

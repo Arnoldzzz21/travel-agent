@@ -26,6 +26,10 @@ def _get_json(url: str, params: dict | None = None, timeout: int = 15):
     return r.json()
 
 
+def _norm(s: str) -> str:
+    return "".join(ch for ch in unicodedata.normalize("NFKD", str(s).lower()) if not unicodedata.combining(ch)).strip()
+
+
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     r = 6371.0
     p1, p2 = math.radians(lat1), math.radians(lat2)
@@ -43,6 +47,7 @@ class Geocoder:
         self._lock = threading.Lock()
         self._last_call = 0.0
         self.last_error = ""
+        self._miss: dict[str, float] = {}
         self._cache: dict[str, dict] = {}
         if self.path.exists():
             try:
@@ -58,29 +63,72 @@ class Geocoder:
         return self._cache.get(self._key(query))
 
     def lookup(self, query: str) -> dict | None:
+        """Ciudades, pueblos y lugares. Prueba Nominatim (OpenStreetMap) y, si falla o no encuentra, Open-Meteo Geocoding."""
         hit = self.cached(query)
         if hit:
             return hit
+        key = self._key(query)
+        if time.time() - self._miss.get(key, 0) < 600:  # no repetir búsquedas fallidas en cada recarga
+            return None
+        self.last_error = ""
+        errors: list[str] = []
         with self._lock:
-            wait = 1.1 - (time.time() - self._last_call)
-            if wait > 0:
-                time.sleep(wait)
-            try:
-                data = _get_json(
-                    "https://nominatim.openstreetmap.org/search",
-                    {"q": query, "format": "jsonv2", "limit": 1, "accept-language": "es"},
-                )
-            except Exception as e:  # red caída, límite, etc.
-                self.last_error = str(e)
-                return None
-            finally:
-                self._last_call = time.time()
+            parts = [x.strip() for x in query.split(",") if x.strip()]
+            attempts = [(self._nominatim, query)]
+            if len(parts) > 2:  # "hotel, barrio, ciudad, país" -> "ciudad, país"
+                attempts.append((self._nominatim, f"{parts[-2]}, {parts[-1]}"))
+            attempts.append((self._openmeteo, query))
+            hit = None
+            for fn, q in attempts:
+                try:
+                    hit = fn(q)
+                except Exception as e:  # red caída, bloqueo por límite, etc.
+                    errors.append(str(e))
+                    hit = None
+                if hit:
+                    break
+        if hit:
+            self._cache[key] = hit
+            self._save()
+            return hit
+        self._miss[key] = time.time()
+        # solo es "error" si TODOS los intentos fallaron por problemas de red/servicio; si no, simplemente no existe
+        if errors and len(errors) == len(attempts):
+            self.last_error = errors[-1]
+        return None
+
+    def _nominatim(self, query: str) -> dict | None:
+        wait = 1.1 - (time.time() - self._last_call)
+        if wait > 0:
+            time.sleep(wait)
+        try:
+            data = _get_json(
+                "https://nominatim.openstreetmap.org/search",
+                {"q": query, "format": "jsonv2", "limit": 1, "accept-language": "es"},
+            )
+        finally:
+            self._last_call = time.time()
         if not data:
             return None
-        hit = {"lat": float(data[0]["lat"]), "lon": float(data[0]["lon"]), "name": data[0].get("display_name", query)}
-        self._cache[self._key(query)] = hit
-        self._save()
-        return hit
+        return {"lat": float(data[0]["lat"]), "lon": float(data[0]["lon"]), "name": data[0].get("display_name", query)}
+
+    @staticmethod
+    def _openmeteo(query: str) -> dict | None:
+        parts = [x.strip() for x in query.split(",") if x.strip()]
+        if not parts:
+            return None
+        d = _get_json("https://geocoding-api.open-meteo.com/v1/search", {"name": parts[0], "count": 10, "language": "es", "format": "json"})
+        res = d.get("results") or []
+        if not res:
+            return None
+        rest = {_norm(x) for x in parts[1:]}
+        if rest:  # con país/provincia: solo aceptamos coincidencias, para no ubicar un homónimo de otro país
+            res = [r for r in res if rest & {_norm(r.get(k, "")) for k in ("country", "admin1", "admin2", "admin3", "country_code")}]
+        if not res:
+            return None
+        r = res[0]
+        name = ", ".join(x for x in (r.get("name"), r.get("admin1"), r.get("country")) if x)
+        return {"lat": float(r["latitude"]), "lon": float(r["longitude"]), "name": name}
 
     def _save(self) -> None:
         try:
@@ -90,6 +138,7 @@ class Geocoder:
 
     def clear(self) -> None:
         self._cache = {}
+        self._miss = {}
         self._save()
 
 
@@ -110,6 +159,22 @@ def gmaps_links(stops: list[str], mode: str = "transit", chunk: int = 10) -> lis
         links.append("https://www.google.com/maps/dir/?" + urlencode(params))
         i += chunk - 1
     return links
+
+
+def gmaps_place_link(query: str) -> str:
+    """Abre un lugar o ciudad en Google Maps (búsqueda por nombre, sin API ni clave)."""
+    return "https://www.google.com/maps/search/?" + urlencode({"api": 1, "query": query})
+
+
+def gmaps_streetview_link(lat: float, lon: float) -> str:
+    """Abre Street View de Google en esas coordenadas, para 'caminar' el lugar antes de viajar."""
+    return "https://www.google.com/maps/@?" + urlencode({"api": 1, "map_action": "pano", "viewpoint": f"{lat:.6f},{lon:.6f}"})
+
+
+def gmaps_leg_link(origin: str, destination: str, mode: str = "transit") -> str:
+    """Cómo llegar de una parada a la siguiente (con horarios si el modo es transporte público)."""
+    mode = mode if mode in MODES else "transit"
+    return "https://www.google.com/maps/dir/?" + urlencode({"api": 1, "origin": origin, "destination": destination, "travelmode": mode})
 
 
 # ---------------------------------------------------------------- contexto compartido
@@ -288,10 +353,6 @@ def tool_wikivoyage(ctx: ToolContext, lugar: str, seccion: str = "", idioma: str
             out["secciones_disponibles"] = [t for t, _ in secs]
         return out
     return {"error": f"No encontré '{lugar}' en Wikivoyage. Prueba con el nombre en inglés o usa buscar_web."}
-
-
-def _norm(s: str) -> str:
-    return "".join(ch for ch in unicodedata.normalize("NFKD", s.lower()) if not unicodedata.combining(ch)).strip()
 
 
 def tool_ficha_pais(ctx: ToolContext, pais: str) -> dict:
