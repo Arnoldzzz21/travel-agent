@@ -128,7 +128,9 @@ def _read_stream(r, on_text) -> dict:
     parts: list[dict] = []
     finish = grounding = usage = None
     feedback = None
-    for raw in r.iter_lines(decode_unicode=True):
+    for raw in r.iter_lines():  # bytes: el servidor no indica charset y requests asumiría latin-1 (tildes rotas)
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8", errors="replace")
         if not raw or not raw.startswith("data:"):
             continue
         try:
