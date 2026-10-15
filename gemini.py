@@ -22,11 +22,9 @@ import tools as T
 
 BASE = "https://generativelanguage.googleapis.com/v1beta"
 
-MODELS = {
-    "Gemini 3.8 Flash (gratis · mejor calidad)": "gemini-3.8-flash",
-    "Gemini 3.5 Flash-Lite (gratis · más rápido)": "gemini-3.5-flash-lite",
-}
-DEFAULT_MODEL = "gemini-3.8-flash"
+# Solo el modelo de la capa gratuita.
+MODELS = {"Gemini 3.5 Flash-Lite (gratis)": "gemini-3.5-flash-lite"}
+DEFAULT_MODEL = "gemini-3.5-flash-lite"
 RETIRED = ("no longer available", "no longer supported", "is not found", "not supported for generatecontent")
 
 
@@ -46,15 +44,15 @@ class GeminiError(Exception):
 def friendly(e: GeminiError) -> str:
     return {
         "auth": "La clave de Gemini no es válida o no tiene permiso. Revísala en aistudio.google.com/apikey.",
-        "quota": "Se agotó el cupo gratuito de Gemini (por minuto o por día). Espera un momento o prueba mañana; "
-                 "también puedes cambiar a Gemini 3.5 Flash-Lite en ⚙️ Ajustes.",
+        "quota": "Se agotó el cupo gratuito de Gemini (por minuto o por día). Espera un momento o prueba mañana.",
+        "busy": "Gemini está saturado en este momento (pasa a ratos en la capa gratis). Espera 1–2 minutos y vuelve a enviar tu mensaje.",
         "network": "No pude conectar con Gemini. Revisa tu conexión e inténtalo de nuevo.",
         "blocked": "Gemini no quiso responder a ese mensaje. Reformúlalo e inténtalo de nuevo.",
     }.get(e.kind, f"Error de Gemini: {e}")
 
 
 class GeminiClient:
-    def __init__(self, api_key: str, timeout: int = 120, max_retries: int = 2, session=None, sleep=time.sleep,
+    def __init__(self, api_key: str, timeout: int = 120, max_retries: int = 3, session=None, sleep=time.sleep,
                  tavily_key: str | None = None, search_off: bool = False):
         self.api_key = api_key
         self.tavily_key = tavily_key or None
@@ -65,8 +63,9 @@ class GeminiClient:
         self.sleep = sleep
 
     def generate(self, model: str, contents: list[dict], system: str | None = None, tools: list[dict] | None = None,
-                 max_tokens: int = 8192, json_mode: bool = False, thinking: str | None = None) -> dict:
-        """thinking: None (por defecto del modelo), "off" (lo mínimo posible) o "low"."""
+                 max_tokens: int = 8192, json_mode: bool = False, thinking: str | None = None, on_text=None) -> dict:
+        """thinking: None (por defecto del modelo), "off" (lo mínimo posible) o "low".
+        on_text(texto_acumulado): si se da, la respuesta llega por partes (streaming) y se va mostrando mientras se genera."""
         cfg: dict = {"maxOutputTokens": max_tokens}
         if json_mode:
             cfg["responseMimeType"] = "application/json"
@@ -78,34 +77,85 @@ class GeminiClient:
             body["systemInstruction"] = {"parts": [{"text": system}]}
         if tools:
             body["tools"] = tools
-        url = f"{BASE}/models/{model}:generateContent"
+        stream = on_text is not None
+        url = _url(model, stream)
         switched = False
-        for attempt in range(self.max_retries + 2):
+        attempt = 0
+        while attempt < self.max_retries + 2:
+            attempt += 1
             try:
-                r = self.session.post(url, json=body, headers={"x-goog-api-key": self.api_key}, timeout=self.timeout)
+                kw = {"stream": True} if stream else {}
+                r = self.session.post(url, json=body, headers={"x-goog-api-key": self.api_key}, timeout=self.timeout, **kw)
             except requests.RequestException as e:
-                if attempt < self.max_retries:
+                if attempt <= self.max_retries:
                     self.sleep(2)
                     continue
                 raise GeminiError("network", str(e)) from e
             if r.status_code == 200:
+                if stream:
+                    try:
+                        return _read_stream(r, on_text)
+                    except requests.RequestException as e:
+                        raise GeminiError("network", str(e)) from e
                 return r.json()
             msg, retry = _error_info(r)
             low = msg.lower()
             if r.status_code in (400, 404) and "thinking" in low and "thinkingConfig" in cfg:  # modelo que no acepta ese ajuste
                 cfg.pop("thinkingConfig")
+                attempt -= 1
                 continue
             if r.status_code in (400, 404) and any(x in low for x in RETIRED) and model != DEFAULT_MODEL and not switched:
                 model, switched = DEFAULT_MODEL, True  # modelo retirado (p. ej. un 2.5 guardado en Ajustes): pasa al vigente
-                url = f"{BASE}/models/{model}:generateContent"
+                url = _url(model, stream)
                 continue
             if r.status_code in (401, 403) or (r.status_code == 400 and "api key" in low):
                 raise GeminiError("auth", msg)
-            if r.status_code in (429, 500, 503) and attempt < self.max_retries and (retry is None or retry <= 20):
-                self.sleep(retry if retry else 3 * (attempt + 1))
+            if r.status_code in (429, 500, 503) and attempt <= self.max_retries and (retry is None or retry <= 20):
+                self.sleep(retry if retry else 3 * attempt)
                 continue
-            raise GeminiError("quota" if r.status_code == 429 else "other", msg, retry)
+            if r.status_code in (429, 500, 503):
+                raise GeminiError("quota" if r.status_code == 429 else "busy", msg, retry)
+            raise GeminiError("other", msg, retry)
         raise GeminiError("other", "Sin respuesta")  # pragma: no cover
+
+
+def _url(model: str, stream: bool = False) -> str:
+    return f"{BASE}/models/{model}:streamGenerateContent?alt=sse" if stream else f"{BASE}/models/{model}:generateContent"
+
+
+def _read_stream(r, on_text) -> dict:
+    """Lee la respuesta SSE de Gemini y la junta en el mismo formato que generateContent, avisando el texto acumulado."""
+    parts: list[dict] = []
+    finish = grounding = usage = None
+    feedback = None
+    for raw in r.iter_lines(decode_unicode=True):
+        if not raw or not raw.startswith("data:"):
+            continue
+        try:
+            chunk = json.loads(raw[5:].strip())
+        except json.JSONDecodeError:
+            continue
+        usage = chunk.get("usageMetadata") or usage
+        feedback = chunk.get("promptFeedback") or feedback
+        for cand in chunk.get("candidates") or []:
+            finish = cand.get("finishReason") or finish
+            grounding = cand.get("groundingMetadata") or grounding
+            for p in (cand.get("content") or {}).get("parts") or []:
+                if "text" in p and not p.get("thought") and parts and "text" in parts[-1] and not parts[-1].get("thought") and "functionCall" not in parts[-1]:
+                    parts[-1]["text"] += p["text"]
+                    if p.get("thoughtSignature"):
+                        parts[-1]["thoughtSignature"] = p["thoughtSignature"]
+                else:
+                    parts.append(dict(p))
+        on_text("".join(p.get("text", "") for p in parts if not p.get("thought")))
+    if not parts:
+        return {"promptFeedback": feedback or {}, "usageMetadata": usage or {}}
+    cand = {"content": {"role": "model", "parts": parts}}
+    if finish:
+        cand["finishReason"] = finish
+    if grounding:
+        cand["groundingMetadata"] = grounding
+    return {"candidates": [cand], "usageMetadata": usage or {}}
 
 
 def _thinking_cfg(model: str, level: str | None) -> dict | None:
@@ -238,7 +288,7 @@ def web_search(client: GeminiClient, model: str, query: str, max_tokens: int = 3
 
 # ---------------------------------------------------------------- bucle del agente
 def run_agent(client: GeminiClient, model: str, system: str, messages: list[dict], ctx: T.ToolContext, max_searches: int,
-              keep_turns: int = 8, on_tool=None, max_iters: int = 8, max_tokens: int = 8192, append_sources: bool = True) -> agent.AgentResult:
+              keep_turns: int = 8, on_tool=None, max_iters: int = 8, max_tokens: int = 4096, append_sources: bool = True, on_text=None) -> agent.AgentResult:
     """Un turno del agente con Gemini. `messages` es el historial en formato Gemini (se modifica)."""
     def make_tools() -> list[dict]:
         decls = function_declarations()
@@ -252,7 +302,7 @@ def run_agent(client: GeminiClient, model: str, system: str, messages: list[dict
     final = ""
     search_failed = False
     for _ in range(max_iters):
-        resp = client.generate(model, trim_messages(messages, keep_turns), system=system, tools=tools, max_tokens=max_tokens, thinking="low")
+        resp = client.generate(model, trim_messages(messages, keep_turns), system=system, tools=tools, max_tokens=max_tokens, thinking="low", on_text=on_text)
         i, o = _usage(resp)
         result.input_tokens += i
         result.output_tokens += o
@@ -267,6 +317,8 @@ def run_agent(client: GeminiClient, model: str, system: str, messages: list[dict
         messages.append(content)
         calls = [p["functionCall"] for p in content["parts"] if "functionCall" in p]
         if calls:
+            if on_text:
+                on_text("")  # lo que se alcanzó a mostrar era previo a usar herramientas: se borra
             out_parts = []
             for fc in calls:
                 name, args = fc.get("name", ""), fc.get("args") or {}

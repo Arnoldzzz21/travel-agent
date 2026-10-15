@@ -155,9 +155,8 @@ def sidebar(slug: str | None) -> None:
         engine = ENGINES[eng_label]
         new = {"agent_name": name.strip() or "Nómada", "engine": engine}
         if engine == "gemini":
-            glabels, gids = list(gem.MODELS), list(gem.MODELS.values())
-            glabel = st.selectbox("Modelo de Gemini", glabels, index=gids.index(cfg["gemini_model"]) if cfg["gemini_model"] in gids else 0)
-            new["gemini_model"] = gem.MODELS[glabel]
+            new["gemini_model"] = gem.DEFAULT_MODEL
+            st.caption("Modelo: Gemini 3.5 Flash-Lite (gratis).")
             searches = st.slider("Búsquedas web por respuesta", 0, 6, min(int(cfg["max_searches"]), 6), help="Necesitan la clave gratuita de Tavily (abajo). Sin ella, Gemini responde con las fichas base y Wikivoyage. 0 las desactiva.")
         else:
             labels, ids = list(agent.MODELS), list(agent.MODELS.values())
@@ -669,14 +668,16 @@ def page_chat(slug: str, meta: dict, route: pd.DataFrame, places: list[dict]) ->
             try:
                 client = make_client(engine, key, 180)
                 on_tool = lambda n, a: status.write(f"🔧 {n}")
+                live = st.empty()
                 if engine == "gemini":
-                    res = gem.run_agent(client, cfg["gemini_model"], system, hist, ctx, cfg["max_searches"], cfg["history_turns"], on_tool=on_tool)
+                    res = gem.run_agent(client, cfg["gemini_model"], system, hist, ctx, cfg["max_searches"], cfg["history_turns"], on_tool=on_tool,
+                                        on_text=lambda t: live.markdown(t + " ▌" if t else ""))
                 else:
                     res = agent.run_agent(client, cfg["model"], system, hist, ctx, cfg["max_searches"], cfg["history_turns"], on_tool=on_tool)
                 if engine == "gemini":
                     chat["search_off"] = bool(client.search_off and not client.tavily_key)
                 status.update(label="Listo", state="complete")
-                st.markdown(res.text)
+                live.markdown(res.text)
                 chat["display"].append({"role": "assistant", "text": res.text, "tools": sorted(set(res.tools_used))})
                 chat["in"] += res.input_tokens
                 chat["out"] += res.output_tokens

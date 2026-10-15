@@ -48,7 +48,7 @@ CÓMO TRABAJAS
 - Para recorridos usa calcular_ruta: dibuja el mapa en la app y da el enlace de Google Maps. Entre países lejanos (por ejemplo Europa y Japón) ese enlace no cubre vuelos; busca vuelos o trenes en la web.
 - Itinerarios por día: horario aproximado, entrada con precio, transporte entre puntos y total estimado del día.
 - Guarda lugares (guardar_lugar), paradas (agregar_parada) o notas solo cuando el usuario lo pida o lo confirme.
-- Respuestas concisas y fáciles de leer en el celular."""
+- Respuestas concisas y fáciles de leer en el celular: ve al grano (unas 150 palabras o menos) salvo que pidan un itinerario o más detalle. Usa solo las herramientas necesarias y no repitas búsquedas."""
 
 
 def trim_messages(messages: list[dict], keep_turns: int) -> list[dict]:

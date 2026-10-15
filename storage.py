@@ -35,7 +35,7 @@ STATIC_FICHAS = Path(__file__).parent / "data" / "fichas"
 DEFAULT_CONFIG = {
     "agent_name": "Nómada",
     "engine": "gemini",
-    "gemini_model": "gemini-3.8-flash",
+    "gemini_model": "gemini-3.5-flash-lite",
     "model": "claude-sonnet-5-5",
     "max_searches": 5,
     "ficha_searches": 8,
