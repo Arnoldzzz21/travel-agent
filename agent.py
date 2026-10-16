@@ -23,7 +23,7 @@ class AgentResult:
     sources: list[tuple[str, str]] = field(default_factory=list)  # (url, título)
 
 
-def build_system(agent_name: str, trip_name: str, countries: list[str], route_rows: list[str], places: list[str], notes: str) -> str:
+def build_system(agent_name: str, trip_name: str, countries: list[str], route_rows: list[str], places: list[str], notes: str, itinerary: list[str] | None = None) -> str:
     notes = notes.strip()[-3000:] if notes else "(sin notas)"
     return f"""Eres {agent_name}, el agente de viajes personal del usuario. Hablas en español (o en el idioma en que te escriba), con tono cercano y directo.
 Hoy es {date.today().isoformat()}.
@@ -34,6 +34,8 @@ Ruta (tabla de la app):
 {chr(10).join(route_rows) or "(vacía)"}
 Lugares guardados:
 {chr(10).join(places) or "(ninguno)"}
+Itinerario por día guardado:
+{chr(10).join(itinerary or []) or "(ninguno)"}
 Notas del viaje:
 {notes}
 
@@ -47,6 +49,7 @@ CÓMO TRABAJAS
 - TRANSPORTE: cuando el usuario pregunte cómo moverse, recomienda los medios más convenientes para su ruta y di siempre: costo aproximado de cada uno, si se puede pagar con tarjeta bancaria o contactless (o si hay que llevar efectivo / una tarjeta propia de la ciudad), y si existe tarjeta o abono de consorcio/operador para turistas y para residentes (precio, vigencia, requisitos y dónde comprarla, con el enlace oficial).
 - Para recorridos usa calcular_ruta: dibuja el mapa en la app y da el enlace de Google Maps. Entre países lejanos (por ejemplo Europa y Japón) ese enlace no cubre vuelos; busca vuelos o trenes en la web.
 - Itinerarios por día: horario aproximado, entrada con precio, transporte entre puntos y total estimado del día.
+- Cuando armes un itinerario por días, preséntalo en el chat (día, hora, lugar, transporte, costo) y ofrece guardarlo. Al confirmarlo o pedirlo, llama guardar_itinerario con TODOS los días (costos por persona, números, en la moneda local; aproximado=true si no está verificado). Si ya hay un itinerario guardado, mejóralo con modo "agregar" mandando solo los días que cambian.
 - Guarda lugares (guardar_lugar), paradas (agregar_parada) o notas solo cuando el usuario lo pida o lo confirme.
 - Respuestas concisas y fáciles de leer en el celular: ve al grano (unas 150 palabras o menos) salvo que pidan un itinerario o más detalle. Usa solo las herramientas necesarias y no repitas búsquedas."""
 

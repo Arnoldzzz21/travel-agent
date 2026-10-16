@@ -9,6 +9,7 @@ viajes/
     lugares.json          lugares guardados (restaurantes, sitios, precios)
     notas.md              notas y resúmenes de conversaciones
     ultima_ruta.json      última ruta calculada por el agente
+    itinerario.json       itinerario por día (horas, lugares, transporte, costos)
 
 Si más adelante se quiere guardar en Google Drive, solo hay que reemplazar esta clase
 por otra con los mismos métodos.
@@ -26,7 +27,7 @@ from pathlib import Path
 
 import pandas as pd
 
-TRIP_FILES = ("trip.json", "ruta.csv", "lugares.json", "notas.md", "ultima_ruta.json")
+TRIP_FILES = ("trip.json", "ruta.csv", "lugares.json", "notas.md", "ultima_ruta.json", "itinerario.json")
 ROUTE_COLS = ["Ciudad", "País", "Llegada", "Salida", "Hotel", "Notas"]
 DATE_COLS = ["Llegada", "Salida"]
 
@@ -219,6 +220,15 @@ class TripStore:
         places = self.load_places(slug)
         places.append(place)
         self.save_places(slug, places)
+
+    # ---------- itinerario por día ----------
+    def load_itinerary(self, slug: str) -> list[dict]:
+        import plan
+        return plan.clean_itinerary(self.load_json(slug, "itinerario.json", []))
+
+    def save_itinerary(self, slug: str, days: list[dict]) -> None:
+        import plan
+        self.save_json(slug, "itinerario.json", plan.clean_itinerary(days))
 
     # ---------- notas ----------
     def read_notes(self, slug: str) -> str:

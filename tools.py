@@ -303,6 +303,19 @@ def tool_agregar_parada(ctx: ToolContext, ciudad: str, pais: str = "", llegada: 
     return {"ok": True, "agregada": ciudad}
 
 
+def tool_guardar_itinerario(ctx: ToolContext, dias: list, modo: str = "reemplazar") -> dict:
+    import plan
+    new = plan.clean_itinerary(dias)
+    if not new:
+        return {"error": "No recibí días con actividades. Manda dias=[{dia, fecha, pais, titulo, items:[{hora, lugar, actividad, costo, transporte, costo_transporte, moneda, aproximado}]}]."}
+    days = plan.merge_days(ctx.store.load_itinerary(ctx.slug), new) if modo == "agregar" else new
+    ctx.store.save_itinerary(ctx.slug, days)
+    ctx.changed = True
+    b = plan.budget(days)
+    return {"ok": True, "dias_guardados": len(new), "dias_en_total": len(days), "actividades": b["n_items"],
+            "total_estimado": {c: round(v["total"], 2) for c, v in b["total"].items()}, "sin_costo": b["n_sin_costo"]}
+
+
 def tool_guardar_nota(ctx: ToolContext, texto: str) -> dict:
     ctx.store.append_note(ctx.slug, texto)
     ctx.changed = True
@@ -378,6 +391,7 @@ _FUNCS = {
     "guardar_lugar": tool_guardar_lugar,
     "agregar_parada": tool_agregar_parada,
     "guardar_nota": tool_guardar_nota,
+    "guardar_itinerario": tool_guardar_itinerario,
     "wikivoyage": tool_wikivoyage,
     "ficha_pais": tool_ficha_pais,
 }
@@ -438,6 +452,48 @@ TOOLS: list[dict] = [
         "name": "agregar_parada",
         "description": "Agrega una ciudad a la tabla de ruta del viaje (fechas en formato AAAA-MM-DD).",
         "input_schema": {"type": "object", "properties": {"ciudad": _STR, "pais": _STR, "llegada": _STR, "salida": _STR, "hotel": _STR, "notas": _STR}, "required": ["ciudad"]},
+    },
+    {
+        "name": "guardar_itinerario",
+        "description": "Guarda el itinerario por día en la pestaña Ruta de la app (con horas, lugares, transporte y costos) para que el usuario lo vea y lo edite. Úsalo SOLO cuando el usuario pida guardarlo o confirme tu propuesta. Manda todos los días con sus actividades; con modo 'agregar' solo reemplazas los días que mandes. Costos por persona, como número, en la moneda local (en Japón: USD); marca aproximado=true si el dato no está verificado.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "dias": {
+                    "type": "array",
+                    "description": "Lista de días",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "dia": {"type": "integer", "description": "Número de día: 1, 2, 3…"},
+                            "fecha": {**_STR, "description": "AAAA-MM-DD si se conoce"},
+                            "pais": _STR,
+                            "titulo": {**_STR, "description": "Ej. 'Madrid clásico'"},
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "hora": {**_STR, "description": "HH:MM"},
+                                        "lugar": _STR,
+                                        "actividad": _STR,
+                                        "costo": {"type": "number", "description": "Entrada o gasto de la actividad"},
+                                        "transporte": {**_STR, "description": "Cómo llegar ahí, ej. 'Metro L2'"},
+                                        "costo_transporte": {"type": "number"},
+                                        "moneda": {**_STR, "description": "ISO, ej. EUR"},
+                                        "aproximado": {"type": "boolean"},
+                                    },
+                                    "required": ["lugar"],
+                                },
+                            },
+                        },
+                        "required": ["dia", "items"],
+                    },
+                },
+                "modo": {"type": "string", "enum": ["reemplazar", "agregar"]},
+            },
+            "required": ["dias"],
+        },
     },
     {
         "name": "guardar_nota",

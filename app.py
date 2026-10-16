@@ -17,6 +17,7 @@ import ficha as ficha_mod
 import gemini as gem
 import tools as T
 import exports
+import plan
 import ui
 from countries import SUBREGIONS, load_countries
 from storage import ROUTE_COLS, TripStore, normalize_route
@@ -125,6 +126,14 @@ def restore_trip() -> None:
     except ValueError as e:
         st.session_state["restore_msg"] = ("err", str(e))
     bump("restore_ver")
+
+
+def send_suggestion(suggestions: dict) -> None:
+    """Un chip del chat envía su mensaje y queda desmarcado."""
+    pick = st.session_state.get("chat_pills")
+    if pick in suggestions:
+        st.session_state["pending_prompt"] = suggestions[pick]
+    st.session_state["chat_pills"] = None
 
 
 def pick_country() -> None:
@@ -392,6 +401,13 @@ def render_ficha(c, f: dict) -> None:
 
 # ============================================================ Ruta
 def page_route(slug: str, route: pd.DataFrame, places: list[dict]) -> None:
+    sub = st.segmented_control("Vista de ruta", ["📍 Paradas", "🗓️ Itinerario", "💰 Presupuesto"], default="📍 Paradas", key="route_view", label_visibility="collapsed") or "📍 Paradas"
+    if sub == "🗓️ Itinerario":
+        page_itinerary(slug, route, places)
+        return
+    if sub == "💰 Presupuesto":
+        page_budget(slug, places)
+        return
     ui.section_title("Paradas del viaje")
     ver = st.session_state.get("route_ver", 0)
     options = sorted({c.es for c in COUNTRIES} | {p for p in route["País"].tolist() if p})
@@ -417,6 +433,9 @@ def page_route(slug: str, route: pd.DataFrame, places: list[dict]) -> None:
     buf = io.BytesIO()
     clean_none(edited).to_excel(buf, index=False, sheet_name="Ruta")
     c2.download_button("⬇️ Descargar Excel", buf.getvalue(), file_name=f"{slug}-ruta.xlsx", width="stretch", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+    st.download_button("🖨️ Versión para llevar (imprimir o PDF)", print_html(slug, route, places), file_name=f"{slug}.html", mime="text/html", width="stretch",
+                       help="Se abre sin internet; con Imprimir → Guardar como PDF la tienes en el celular.")
 
     with st.expander("📥 Importar mi ruta desde Excel o CSV"):
         st.caption("Columnas reconocidas: Ciudad, País, Llegada, Salida, Hotel, Notas (también en inglés).")
@@ -463,6 +482,90 @@ def page_route(slug: str, route: pd.DataFrame, places: list[dict]) -> None:
         bump("places_ver")
         st.toast("Lugares guardados")
         st.rerun()
+
+
+def page_itinerary(slug: str, route: pd.DataFrame, places: list[dict]) -> None:
+    days = store.load_itinerary(slug)
+    if not days:
+        with st.container(border=True):
+            st.markdown("**Aún no hay itinerario por día.**")
+            st.markdown("1. Ve al **💬 Chat** y toca «🗓️ Arma mi itinerario por días».\n2. Cuando te guste, toca **💾 Guardar como itinerario** bajo la respuesta.\n3. Aquí lo verás por día y podrás editarlo.")
+        if st.button("➕ Crear uno a mano", width="stretch"):
+            store.save_itinerary(slug, [{"dia": 1, "fecha": "", "pais": "", "titulo": "", "items": [{"hora": "09:00", "lugar": "Mi primer lugar", "actividad": "", "aproximado": True}]}])
+            bump("itin_ver")
+            st.rerun()
+        return
+    for d in days:
+        head = f"Día {d['dia']}" + (f" · {d['fecha']}" if d["fecha"] else "") + (f" · {d['titulo']}" if d["titulo"] else "")
+        tot = plan.budget([d])["total"]
+        day_cost = "  —  " + " + ".join(plan.money(c, v["total"]) for c, v in tot.items()) if tot else ""
+        with st.expander(head + day_cost, expanded=d is days[0]):
+            for it in d["items"]:
+                costs = [c for c in (it["costo"], it["costo_transporte"]) if c is not None]
+                cost = f" · **{sum(costs):,.2f} {it['moneda']}**" + (" (aprox.)" if it["aproximado"] else "") if costs else ""
+                place = f"[{it['lugar']}]({T.gmaps_place_link(it['lugar'])})" if it["lugar"] else ""
+                st.markdown(f"**{it['hora'] or '·'}** {place}{' — ' + it['actividad'] if it['actividad'] else ''}{cost}" + (f"  \n🚆 {it['transporte']}" if it["transporte"] else ""))
+    ui.section_title("Editar itinerario")
+    st.caption("Cada fila es una actividad; el número de **Día** la agrupa. Costos por persona. Marca «Aprox» si no está verificado.")
+    iver = st.session_state.get("itin_ver", 0)
+    edited = st.data_editor(
+        plan.to_table(days), num_rows="dynamic", hide_index=True, width="stretch", key=f"itin_{slug}_{iver}",
+        column_config={
+            "Día": st.column_config.NumberColumn("Día", min_value=1, step=1, format="%d", required=True),
+            "Costo": st.column_config.NumberColumn("Costo", min_value=0, format="%.2f"),
+            "Costo transp.": st.column_config.NumberColumn("Costo transp.", min_value=0, format="%.2f"),
+            "Aprox": st.column_config.CheckboxColumn("Aprox", default=True),
+        },
+    )
+    c1, c2 = st.columns(2)
+    if c1.button("💾 Guardar itinerario", type="primary", width="stretch"):
+        store.save_itinerary(slug, plan.from_table(edited, days))
+        bump("itin_ver")
+        st.toast("Itinerario guardado")
+        st.rerun()
+    c2.download_button("🖨️ Versión para llevar", print_html(slug, route, places), file_name=f"{slug}.html", mime="text/html", width="stretch",
+                       help="Se abre sin internet; con Imprimir → Guardar como PDF la tienes en el celular.")
+
+
+def page_budget(slug: str, places: list[dict]) -> None:
+    days = store.load_itinerary(slug)
+    b = plan.budget(days, places)
+    if not b["total"] and not b["otros_total"]:
+        st.info("Todavía no hay costos. Guarda un itinerario con precios (desde el Chat) o agrega precios a tus lugares guardados.")
+        return
+    if b["total"]:
+        ui.section_title("Total del itinerario (por persona)")
+        cols = st.columns(max(1, min(len(b["total"]), 3)))
+        for col, (cur, v) in zip(cols, b["total"].items()):
+            col.metric(cur, f"{v['total']:,.2f}", help=f"De ese total, {v['aprox']:,.2f} son aproximados")
+        if b["n_aprox"] or b["n_sin_costo"]:
+            st.warning(f"{b['n_aprox']} de {b['n_items']} actividades tienen precio aproximado y {b['n_sin_costo']} no tienen costo. Confirma antes de pagar.")
+        if len(b["total"]) > 1:
+            st.caption("Los totales no convierten entre monedas; el agente puede convertirlos con tipo de cambio si se lo pides.")
+        rows = [{"Día": r["dia"], "Título": r["titulo"], "País": r["pais"], **{c: round(v["total"], 2) for c, v in r["totales"].items()}} for r in b["por_dia"] if r["totales"]]
+        if rows:
+            ui.section_title("Por día")
+            st.dataframe(pd.DataFrame(rows).fillna(""), hide_index=True, width="stretch")
+        if any(k != "Sin país" for k in b["por_pais"]):
+            ui.section_title("Por país")
+            st.dataframe(pd.DataFrame([{"País": k, **{c: round(v["total"], 2) for c, v in tot.items()}} for k, tot in b["por_pais"].items()]).fillna(""), hide_index=True, width="stretch")
+    if b["otros_total"]:
+        ui.section_title("Otros lugares guardados (referencia)")
+        st.caption("Lugares con precio que no están en el itinerario; no se suman al total de arriba.")
+        for cur, v in b["otros_total"].items():
+            st.metric(cur, f"{v['total']:,.2f}")
+
+
+def print_html(slug: str, route: pd.DataFrame, places: list[dict]) -> bytes:
+    meta = store.meta(slug)
+    stops = []
+    for _, r in route.iterrows():
+        if str(r["Ciudad"]).strip():
+            g = geo.cached(stop_query(r))
+            stops.append({"ciudad": r["Ciudad"], "pais": r["País"], "llegada": r["Llegada"], "salida": r["Salida"], "hotel": r["Hotel"], "notas": r["Notas"],
+                          "lat": g["lat"] if g else None, "lon": g["lon"] if g else None})
+    days = store.load_itinerary(slug)
+    return exports.build_html(meta.get("name", slug), meta.get("paises", []), stops, days, plan.budget(days, places), places, store.read_notes(slug)).encode("utf-8")
 
 
 # ============================================================ Mapa
@@ -633,20 +736,30 @@ def page_chat(slug: str, meta: dict, route: pd.DataFrame, places: list[dict]) ->
         else:
             st.info("Para chatear con Claude pega tu clave de Anthropic en ⚙️ Ajustes (barra lateral). El resto de la app funciona sin ella.")
 
-    if not chat["display"]:
-        st.caption(f"Pregúntale a {name}:")
-        for sug in ["¿Cuál es el mejor transporte en la ciudad de mi próxima parada y cuánto cuesta?", "Dónde comer bien y barato en mi próxima parada", "Arma el recorrido de un día con precios de entradas"]:
-            st.button(sug, key=f"sug_{sug[:20]}", on_click=lambda v=sug: st.session_state.update(pending_prompt=v), disabled=not key)
-
     for m in chat["display"]:
         with st.chat_message(m["role"], avatar="🧑‍💻" if m["role"] == "user" else "🧭"):
             st.markdown(m["text"])
             if m.get("tools"):
                 st.caption("🔧 " + ", ".join(m["tools"]))
 
+    first_city = next((str(r["Ciudad"]).strip() for _, r in route.iterrows() if str(r["Ciudad"]).strip()), "")
+    where = first_city or "mi viaje"
+    suggestions = {
+        "🗓️ Arma mi itinerario por días": f"Arma mi itinerario por días para {where} con horas, transporte y costos aproximados por persona. Pregúntame lo mínimo que te falte.",
+        f"🚆 ¿Cómo me muevo en {where}?": f"¿Cómo me muevo en {where}? Dime los medios convenientes, cuánto cuestan, si se paga con tarjeta y qué pases existen.",
+        "💳 ¿Cómo pago el transporte?": "¿Cómo pago el transporte en los países de mi ruta? ¿Tarjeta, contactless o efectivo? ¿Hay tarjeta o pase para turistas?",
+        "💰 ¿Cuánto me costará?": "Con mi ruta y mi itinerario guardado, ¿cuánto me costaría el viaje por persona? Separa transporte, comida, entradas y hospedaje, marcando lo aproximado.",
+        f"📍 Qué ver en {where}": f"¿Qué imperdibles recomiendas en {where}? Con precio de entrada y cuánto tiempo toma cada uno.",
+    }
+    chip_ph = st.empty()
+    if key and not chat["display"]:
+        with chip_ph.container():
+            st.caption("Toca una sugerencia o escribe lo que quieras:")
+            st.pills("Sugerencias", list(suggestions), selection_mode="single", key="chat_pills", label_visibility="collapsed", on_change=send_suggestion, args=(suggestions,))
     usage_ph = st.empty()
     prompt = st.chat_input(f"Escríbele a {name}…", disabled=not key) or st.session_state.pop("pending_prompt", None)
     if prompt and key:
+        chip_ph.empty()
         if chat["display"] and (not chat[hist_key] or chat.get("last_engine", engine) != engine):  # cambio de motor: conserva el contexto ya mostrado
             chat[hist_key] = seed_history(engine, chat["display"])
         chat["last_engine"] = engine
@@ -659,6 +772,7 @@ def page_chat(slug: str, meta: dict, route: pd.DataFrame, places: list[dict]) ->
             [f"{i}. {r['Ciudad']} ({r['País']}) {r['Llegada'] or ''} → {r['Salida'] or ''} hotel: {r['Hotel'] or '-'}" for i, (_, r) in enumerate(route.iterrows(), 1)],
             [f"- {p['nombre']} ({p.get('ciudad', '')}, {p.get('categoria', '')}) {p.get('precio') or ''} {p.get('moneda') or ''}" for p in places[:40]],
             store.read_notes(slug),
+            [f"Día {d['dia']} {d['fecha']} {d['titulo']}: " + "; ".join(f"{it['hora']} {it['lugar']}" for it in d["items"]) for d in store.load_itinerary(slug)],
         )
         hist = chat[hist_key]
         n0 = len(hist)
@@ -697,6 +811,14 @@ def page_chat(slug: str, meta: dict, route: pd.DataFrame, places: list[dict]) ->
                     st.error("Límite de uso alcanzado. Espera un momento e inténtalo de nuevo.")
                 else:
                     st.error(f"Error de la API de Claude: {e}")
+    if key and chat["display"] and chat["display"][-1]["role"] == "assistant":  # debajo de la última respuesta (también la que acaba de llegar)
+        b1, b2 = st.columns(2)
+        if b1.button("💾 Guardar como itinerario", width="stretch", help="El agente guarda en la pestaña Ruta → Itinerario lo que acaba de proponer."):
+            st.session_state["pending_prompt"] = "Guarda en la app el itinerario por días que acabas de proponer (usa guardar_itinerario con todos los días, horas, lugares, transporte y costos)."
+            st.rerun()
+        if b2.button("💰 Calcular el costo", width="stretch"):
+            st.session_state["pending_prompt"] = "Resume el costo total estimado de lo que acabas de proponer por persona, separando transporte, entradas y comida, y marca lo aproximado."
+            st.rerun()
     usage_ph.caption(f"{eng} · memoria: últimos {cfg['history_turns']} mensajes tuyos · {chat['in'] + chat['out']:,} tokens usados en esta conversación")
 
 
